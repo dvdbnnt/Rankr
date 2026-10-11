@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6b3a">
+<meta name="description" content="Rankr : transforme tes matchs de foot entre potes en une vraie saison, avec cartes de joueurs, stats et classements.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Rankr</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5ee;--surface:#fff;--ink:#14231a;--mute:#5d6b61;--line:#d9dfd2;--turf:#1f6b3a;--turf2:#e3efe3;--gold:#e8b931;--red:#cf3f3f;--nav:#14231a;--navink:#f3f5ee;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a13;--surface:#17271d;--ink:#eef2e8;--mute:#9db0a2;--line:#274132;--turf:#4fb36f;--turf2:#1d3526;--nav:#0a120d}}
+:root[data-theme="dark"]{--bg:#0f1a13;--surface:#17271d;--ink:#eef2e8;--mute:#9db0a2;--line:#274132;--turf:#4fb36f;--turf2:#1d3526;--nav:#0a120d}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.45 Barlow,system-ui,sans-serif;display:flex;justify-content:center}
+#app{width:100%;max-width:480px;height:100%;display:flex;flex-direction:column;position:relative}
+main{flex:1;overflow-y:auto;padding:18px 16px 24px}
+h1,h2,h3,.num{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;letter-spacing:.01em}
+h1{font-size:34px;line-height:1}
+h2{font-size:24px;margin:22px 0 10px}
+.sub{color:var(--mute);font-size:14px}
+.screen{display:none}.screen.on{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}
+button{font:inherit;cursor:pointer;border:0;color:inherit;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{background:var(--turf);color:#fff;font-weight:600;padding:14px 18px;border-radius:10px;width:100%;font-size:17px}
+.btn.alt{background:var(--turf2);color:var(--ink)}
+.btn:disabled{opacity:.45}
+nav{display:flex;background:var(--nav);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;color:var(--navink);opacity:.6;padding:6px 0;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button span{font-size:20px}nav button.on{opacity:1;color:var(--gold)}
+.score{font-size:46px;line-height:1}
+.hero{background:var(--turf);color:#fff;border-radius:16px;padding:18px;margin:14px 0}
+.hero .sub{color:#cfe3d3}
+.res{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.res:last-child{border:0}
+.tag{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--turf2)}
+.tag.w{background:var(--gold);color:#3b2d00}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 12px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface);font-weight:500}
+.chip.A{background:var(--turf);color:#fff;border-color:var(--turf)}
+.chip.B{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.bal{height:10px;border-radius:9px;background:var(--ink);overflow:hidden;margin:8px 0 4px}
+.bal i{display:block;height:100%;background:var(--turf)}
+.step{display:flex;align-items:center;gap:8px}
+.step button{width:44px;height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font-size:22px;font-weight:600}
+.attr{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.seg{display:flex;gap:6px}
+.seg button{width:52px;height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:18px}
+.seg button.up.on{background:var(--turf);color:#fff;border-color:var(--turf)}
+.seg button.dn.on{background:var(--red);color:#fff;border-color:var(--red)}
+.seg button.eq.on{background:var(--line)}
+.dots{display:flex;gap:6px;margin:8px 0 14px}.dots i{flex:1;height:5px;border-radius:5px;background:var(--line)}.dots i.on{background:var(--turf)}
+.fut{width:230px;margin:6px auto 18px;padding:18px 18px 16px;border-radius:18px 18px 60px 60px;background:linear-gradient(160deg,#f4e7b0,#cfa84a 55%,#8f6b1d);color:#2b2000;box-shadow:0 10px 24px rgba(0,0,0,.25);position:relative}
+.fut.form{background:linear-gradient(160deg,#fff3a6,#f2c230 50%,#b3820b);box-shadow:0 0 0 3px #fff3a6,0 0 28px rgba(242,194,48,.7)}
+.fut .ovr{font-size:60px;line-height:.9}.fut .nm{font-size:30px;text-align:center;border-top:2px solid rgba(43,32,0,.35);margin-top:8px;padding-top:6px}
+.fut .st{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:20px;margin-top:4px}
+.fut .flag{position:absolute;top:14px;right:16px;font-size:12px;font-weight:600;text-align:right}
+.hist{display:flex;gap:6px}.hist b{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;color:#fff}
+.V{background:var(--turf)}.N{background:#8a948c}.D{background:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{font-weight:500;color:var(--mute);text-align:right;font-size:13px;padding:4px 6px}th:first-child,td:first-child{text-align:start}
+td{padding:11px 6px;border-top:1px solid var(--line);text-align:right}
+td.n{font-weight:600}tr.out td{opacity:.5}
+tr[data-p]{cursor:pointer}
+.troph{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.troph div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;font-size:13px}
+.troph b{display:block;font-size:26px}
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:5;padding:16px}
+.modal.on{display:flex}
+.story{width:min(260px,70vw);aspect-ratio:9/16;border-radius:18px;background:linear-gradient(170deg,#1f6b3a,#0d2a18);color:#fff;padding:22px 18px;display:flex;flex-direction:column;text-align:center}
+.story .pod{margin-top:auto;display:flex;align-items:flex-end;justify-content:center;gap:6px}
+.story .pod div{flex:1;background:rgba(255,255,255,.14);border-radius:8px 8px 0 0;padding:6px 2px;font-size:13px}
+.toast{position:absolute;left:16px;right:16px;bottom:84px;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:10px;font-weight:500;display:none;z-index:6}
+.toast.on{display:block}
+.lgbtn{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:9px 14px;font-weight:600;margin-bottom:12px}
+.sheet{background:var(--surface);color:var(--ink);width:100%;border-radius:18px;padding:16px;max-height:85%;overflow-y:auto}
+.lgi{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:start;padding:12px;border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--surface)}
+.lgi.on{border-color:var(--turf);background:var(--turf2)}
+.sheet input{font:inherit;width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:8px}
+.hide{display:none!important}
+#auth{position:absolute;inset:0;z-index:20;background:var(--bg);display:flex;flex-direction:column;overflow-y:auto}
+.aside{background:linear-gradient(160deg,#1f6b3a,#0d2a18);color:#fff;padding:calc(22px + env(safe-area-inset-top,0px)) 20px 20px}
+.ab{font-size:34px;line-height:1}.at{color:#cfe3d3;margin-top:6px}
+.ac,.al{display:none}
+.fm{flex:1;display:flex;justify-content:center;padding:22px 20px 30px}
+.fmi{width:100%;max-width:400px}
+#auth label{font-weight:500;font-size:14px}
+#auth input,#roster input{font:inherit;width:100%;padding:13px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);margin:4px 0 12px}
+.pw{position:relative}.eye{position:absolute;inset-inline-end:10px;top:12px;font-size:13px;font-weight:600;color:var(--turf);padding:4px}
+.tabs{display:flex;background:var(--turf2);border-radius:12px;padding:4px;margin-bottom:18px}
+.tabs button{flex:1;padding:11px;border-radius:9px;font-weight:600}
+.tabs button.on{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.msg{min-height:22px;margin-bottom:8px;font-size:14px;color:#b3261e}
+.msg.ok{color:var(--turf)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .msg{color:#ff8a80}}
+.lnk{color:var(--turf);font-weight:600;text-decoration:underline;padding:6px 0;font-size:15px}
+@media (min-width:900px){
+#auth{flex-direction:row}
+.aside{width:46%;display:flex;flex-direction:column;justify-content:center;padding:48px}
+.ab{font-size:64px}.at{font-size:18px;max-width:420px}
+.ac{display:block;margin:28px 0}.al{display:block;padding-left:18px;line-height:1.9}
+.fm{align-items:center}
+}
+.rm{margin-inline-start:6px;padding:2px 6px;font-weight:600}
+#roster input{margin:0}
+.warn{background:rgba(0,0,0,.22);border-radius:12px;padding:12px;font-size:15px}
+.hero .row .btn,.warn .btn{width:auto;flex:1;padding:12px 10px;font-size:15px}
+a.btn{display:block;text-align:center;text-decoration:none}
+.pn{font:inherit;color:inherit;padding:0}.pn:disabled{cursor:default}
+.sheet select{font:inherit;width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:8px}
+.sheet label{font-weight:500;font-size:14px}
+.rw{cursor:pointer;border-radius:10px;padding:0 6px}
+.rw:hover,.rw:focus-visible{background:var(--turf2)}
+.prow{margin-top:10px}.pbar{height:5px;border-radius:5px;background:var(--line);margin-top:4px;overflow:hidden}.pbar i{display:block;height:100%;background:var(--turf)}
+.ev{padding:8px 0;border-bottom:1px solid var(--line)}.ev:last-child{border:0}
+.two2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#detail input,#detail select{font:inherit;width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);margin:4px 0 10px}
+:root[dir="rtl"] .arr{display:inline-block;transform:scaleX(-1)}
+.av{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--turf2);overflow:hidden;font-weight:600;flex:none;object-fit:cover}
+.av.lg{width:64px;height:64px;font-size:26px}
+.fav{position:absolute;right:18px;top:58px;width:62px;height:62px;border-radius:50%;object-fit:cover;border:3px solid rgba(43,32,0,.45);background:#f4e7b0;display:grid;place-items:center;font-size:28px;font-weight:700;color:#4a3a08}
+.stars{display:flex;gap:2px}.stars button{font-size:28px;padding:2px 5px;color:var(--line)}.stars button.on{color:var(--gold)}
+.popt{margin-top:10px}
+.pv{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);text-align:start}
+.pv.on{border-color:var(--turf);background:var(--turf2)}
+#poll input,#chat input,#profil input,#profil select{font:inherit;padding:11px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;width:100%;margin:4px 0 10px}
+#poll .row input{flex:1;width:auto;margin:0}
+#chat .row input{margin:0}
+#chatList{height:min(58vh,520px);overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.msg-row{display:flex;gap:8px;align-items:flex-end}.msg-row.me{justify-content:flex-end}
+.bub{max-width:78%;background:var(--turf2);border-radius:14px;padding:8px 12px;overflow-wrap:anywhere}
+.msg-row.me .bub{background:var(--turf);color:#fff}.msg-row.me .bub .sub{color:#d6ead9}
+.srow{display:flex;align-items:center;gap:10px;width:100%;padding:10px 0;border-top:1px solid var(--line)}.srow:first-child{border:0}
+.mapsvg{width:100%;max-width:340px;display:block;margin:6px auto 8px}
+.mapsvg .bg{fill:var(--turf2)}.mapsvg .rg{fill:none;stroke:var(--line);stroke-dasharray:3 4}
+.mapsvg text{fill:var(--mute);font-size:9px}.mapsvg .me{fill:var(--ink)}
+.mapsvg .mp circle{fill:var(--turf);cursor:pointer}.mapsvg .mp text{fill:#fff;font-size:10px;font-weight:700;pointer-events:none}
+.mapsvg .mp.on circle{fill:var(--gold)}.mapsvg .mp.on text{fill:#2b2000}
+.mlist{max-height:170px;overflow-y:auto;margin-bottom:6px}
+.mi{display:flex;gap:8px;align-items:center;width:100%;padding:8px;border-radius:8px}.mi.on{background:var(--turf2)}
+#detail select{margin-top:8px}
+.lang{display:flex;gap:4px}
+main{overflow-x:hidden}
+#stTabs{overflow-x:auto}#stTabs button{flex:1 0 auto;padding:10px 9px;font-size:14px;white-space:nowrap}
+.srow>span{min-width:0}
+@media (min-width:900px){:root[dir="rtl"] .toast{right:auto;left:24px}}
+.lang button{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px}
+.lang button.on{background:var(--turf);color:#fff;border-color:var(--turf)}
+.fut{direction:ltr}
+.res b{direction:ltr;unicode-bidi:isolate}
+:root[lang="he"] *{font-family:Heebo,"Barlow",system-ui,sans-serif}
+:root[dir="rtl"] th,:root[dir="rtl"] td{text-align:start}
+:root[dir="rtl"] th:first-child,:root[dir="rtl"] td:first-child{text-align:right}
+:root[dir="rtl"] input[type=email],:root[dir="rtl"] input[type=url],:root[dir="rtl"] input[type=password]{direction:ltr}
+@media (prefers-reduced-motion:no-preference){.fut{transition:transform .2s}.fut:hover{transform:rotate(-2deg)}}
+.brand{display:none}
+.two{margin-top:14px}
+.two>div>h2:first-child{margin-top:0}
+@media (min-width:900px){
+#app{max-width:none;flex-direction:row}
+nav{order:-1;flex-direction:column;width:240px;flex:none;padding:28px 14px;gap:4px;align-items:stretch}
+.brand{display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:30px;line-height:1;color:var(--gold);padding:0 14px 24px}
+nav button{flex:none;flex-direction:row;gap:12px;font-size:17px;padding:12px 14px;border-radius:10px;opacity:.75;text-align:start}
+nav button.on{background:rgba(255,255,255,.1)}
+nav button span{font-size:22px}
+main{padding:32px 48px}
+.screen{max-width:1080px;margin:0 auto}
+#vest{max-width:560px}
+h1{font-size:46px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.sheet{max-width:480px}
+.toast{left:auto;right:24px;bottom:24px;width:360px}
+table{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<main>
+
+<section class="screen on" id="home">
+  <div class="row sp" style="margin-bottom:12px"><button class="lgbtn" id="lgBtn" aria-label="Changer de ligue" style="margin:0"></button><div class="lang" role="group" aria-label="Langue"><button data-lang="fr">FR</button><button data-lang="en">EN</button><button data-lang="es">ES</button><button data-lang="he">עב</button></div></div>
+  <h1 id="lgTitle">Rankr</h1><p class="sub" id="lgMeta"></p><div class="two"><div>
+  <div class="hero">
+    <p class="sub">Prochain match</p>
+    <div class="num" id="nextD" style="font-size:34px;line-height:1.05"></div>
+    <p class="sub" style="margin:4px 0 10px" id="nextI"></p><div id="miss" style="margin-bottom:12px"></div>
+    <button class="btn" style="background:var(--gold);color:#2b2000" data-go="match">Composer les équipes</button><div class="row" style="margin-top:10px" id="mtActs"></div>
+  </div>
+  <div class="card row sp"><div><b>Notes à donner</b><p class="sub">Match du 4 oct. · 2 h restantes</p></div><button class="btn alt" style="width:auto" data-go="vest">Noter</button></div>
+  </div><div><div class="card" id="poll"></div><h2>Derniers résultats</h2><p class="sub" style="margin:-4px 0 8px">Touche un match pour voir les buts, les compos et noter tes coéquipiers.</p>
+  <div class="card" id="results"></div>
+  <div class="card"><b>Inviter un pote</b><p class="sub">Code de la ligue : <b id="lgCode"></b></p></div><div class="card" id="roster"></div></div></div>
+</section>
+
+<section class="screen" id="match">
+  <h1>Match & score</h1>
+  <p class="sub">Touche un joueur : équipe A, équipe B, puis retiré.</p><p class="sub" id="fmtHint"></p>
+  <div class="two"><div><h2>Joueurs</h2>
+  <div class="chips" id="pick"></div>
+  </div><div><h2>Équilibre des équipes</h2>
+  <div class="card">
+    <div class="row sp"><b>Équipe A <span id="avA" class="num">–</span></b><b><span id="avB" class="num">–</span> Équipe B</b></div>
+    <div class="bal"><i id="balbar" style="width:50%"></i></div>
+    <p class="sub" id="baltxt">Choisis des joueurs pour voir l'équilibre. Indication seulement, rien n'est bloqué.</p>
+  </div>
+  <h2>Score final</h2>
+  <div class="card row sp">
+    <div class="step"><button data-s="A" data-d="-1" aria-label="Moins un but A">−</button><span class="num score" id="sA">0</span><button data-s="A" data-d="1" aria-label="Plus un but A">+</button></div>
+    <b>–</b>
+    <div class="step"><button data-s="B" data-d="-1" aria-label="Moins un but B">−</button><span class="num score" id="sB">0</span><button data-s="B" data-d="1" aria-label="Plus un but B">+</button></div>
+  </div>
+  <button class="btn" id="validate" disabled>Valider le score</button>
+  <p class="sub" style="margin-top:8px">Un joueur de chaque équipe confirme, sinon validation automatique après 12 h.</p></div></div>
+</section>
+
+<section class="screen" id="vest">
+  <h1>Vestiaire</h1>
+  <p class="sub">Note tes coéquipiers. Anonyme, 30 secondes.</p>
+  <div class="dots" id="dots"></div>
+  <div id="vbody"></div>
+</section>
+
+<section class="screen" id="profil"></section>
+<section class="screen" id="detail"></section>
+<section class="screen" id="chat"><h1>Chat de la ligue</h1><p class="sub" id="chatLg"></p><div id="chatList" class="card" role="log" aria-live="polite"></div><div class="row" style="margin-top:10px"><input id="chatIn" maxlength="300" placeholder="Écris un message…" aria-label="Message"><button class="btn" style="width:auto" id="chatSend">Envoyer</button></div></section>
+
+<section class="screen" id="rank">
+  <h1>Stats</h1><div class="tabs" id="stTabs"><button class="on" data-st="rank">Classement</button><button data-st="goals">Buteurs</button><button data-st="assists">Passeurs</button><button data-st="gk">Gardiens</button></div><div id="rankPane"><h2 style="margin:0 0 4px">Classement d'octobre</h2>
+  <p class="sub">Victoire 3 pts · Nul 1 pt · MVP +2 · Casserole −1. Classé à partir de 3 matchs joués.</p>
+  <div class="two"><div><div class="card" style="margin-top:0;padding:6px 10px"><table id="tbl"></table></div></div><div>
+  <h2>Palmarès du mois</h2>
+  <div class="troph" id="troph"></div>
+  <button class="btn" style="margin-top:16px" id="storyBtn">Créer la story du podium</button></div></div>
+</div><div id="stBody" style="display:none"></div>
+</section>
+
+</main>
+<nav id="nav"><div class="brand">⚽ Rankr</div>
+  <button class="on" data-go="home"><span>🏠</span>Accueil</button>
+  <button data-go="match"><span>⚽</span>Match</button>
+  <button data-go="vest"><span>🧤</span>Vestiaire</button>
+  <button data-go="rank"><span>📊</span>Stats</button>
+  <button data-go="chat"><span>💬</span>Chat</button>
+  <button data-go="profil"><span>🪪</span>Profil</button>
+</nav>
+<div class="modal" id="modal"><div class="story" id="story"></div><button class="btn alt" style="max-width:260px" id="closeM">Fermer</button><p class="sub" style="color:#ddd">Aperçu : l'export image sera ajouté dans la version finale.</p></div>
+<div class="modal" id="lgModal"><div class="sheet"><h2 style="margin:0 0 10px">Mes ligues</h2><div id="lgList"></div><h3 style="font-size:20px;margin:14px 0 8px">Rejoindre avec un code</h3><div class="row"><input id="joinCode" placeholder="Ex. JEU-3057" aria-label="Code d'invitation"><button class="btn alt" style="width:auto;margin-bottom:8px" id="joinBtn">Rejoindre</button></div><h3 style="font-size:20px;margin:8px 0">Créer une ligue</h3><div class="row"><input id="newName" placeholder="Nom de la ligue" aria-label="Nom de la ligue"><button class="btn alt" style="width:auto;margin-bottom:8px" id="newBtn">Créer</button></div><button class="btn" id="lgClose">Fermer</button></div></div>
+<div id="auth" role="dialog" aria-label="Connexion ou création de compte">
+<div class="aside"><div class="num ab">Rankr</div><p class="at">Tes matchs entre potes deviennent une vraie saison.</p>
+<div class="fut form ac"><div class="flag">EN FORME</div><div class="num ovr">87</div><div class="sub" style="color:#4a3a08">Milieu</div><div class="num nm">TOI</div></div>
+<ul class="al"><li>Une carte qui évolue après chaque match</li><li>Des notes anonymes entre coéquipiers</li><li>Le podium du mois à partager</li></ul></div>
+<div class="fm"><div class="fmi">
+<div class="lang" role="group" aria-label="Langue" style="justify-content:flex-end;margin-bottom:14px"><button data-lang="fr">FR</button><button data-lang="en">EN</button><button data-lang="es">ES</button><button data-lang="he">עב</button></div><div class="tabs" role="tablist"><button class="on" id="tabIn" role="tab" aria-selected="true">Se connecter</button><button id="tabUp" role="tab" aria-selected="false">Créer un compte</button></div>
+<div id="fIn">
+<label for="inMail">E-mail</label><input id="inMail" type="email" autocomplete="email" placeholder="toi@exemple.fr">
+<label for="inPw">Mot de passe</label><div class="pw"><input id="inPw" type="password" autocomplete="current-password"><button class="eye" type="button">Afficher</button></div>
+<p class="msg" id="inErr" role="alert"></p>
+<button class="btn" id="inBtn">Se connecter</button>
+<div class="row sp" style="margin-top:10px"><button class="lnk" id="magicBtn">Recevoir un lien de connexion</button><button class="lnk" id="demoBtn">Essayer le compte démo</button></div>
+<p class="sub" style="margin-top:14px">Pas encore de compte ? <button class="lnk" id="goUp">Crée le tien</button></p><p class="sub" style="margin-top:10px;font-size:12px">Version démo : tes données sont enregistrées sur cet appareil uniquement.</p>
+</div>
+<div id="fUp" style="display:none">
+<label for="upName">Pseudo</label><input id="upName" autocomplete="nickname" maxlength="16" placeholder="Ton nom sur la carte">
+<label for="upMail">E-mail</label><input id="upMail" type="email" autocomplete="email" placeholder="toi@exemple.fr">
+<label for="upPw">Mot de passe (6 caractères minimum)</label><div class="pw"><input id="upPw" type="password" autocomplete="new-password"><button class="eye" type="button">Afficher</button></div>
+<label for="upPhoto">Photo de profil (facultatif)</label><div class="row" style="margin:6px 0 14px"><span class="av lg" id="upAv">📷</span><input type="file" accept="image/*" id="upPhoto" style="margin:0"></div><label>Ton niveau (pour ta première carte)</label>
+<div class="chips" id="lvl" style="margin:6px 0 14px"><button class="chip" data-l="Débutant">Débutant</button><button class="chip A" data-l="Intermédiaire">Intermédiaire</button><button class="chip" data-l="Confirmé">Confirmé</button></div>
+<p class="msg" id="upErr" role="alert"></p>
+<button class="btn" id="upBtn">Créer mon compte</button>
+<p class="sub" style="margin-top:14px">Déjà inscrit ? <button class="lnk" id="goIn">Connecte-toi</button></p><p class="sub" style="margin-top:10px;font-size:12px">Version démo : tes données sont enregistrées sur cet appareil uniquement.</p>
+</div>
+</div></div></div>
+<div class="modal" id="mtModal"><div class="sheet"><h2 style="margin:0 0 10px">Prochain match</h2>
+<label for="mtFmt">Format</label><select id="mtFmt"></select>
+<div class="row" style="align-items:flex-start"><div style="flex:1"><label for="mtDate">Date</label><input type="date" id="mtDate"></div><div style="flex:1"><label for="mtTime">Heure</label><input type="time" id="mtTime"></div></div>
+<label for="mtPlace">Lieu</label><input id="mtPlace" maxlength="40" placeholder="Ex. Stade Municipal"><button class="btn alt" type="button" id="mapBtn" style="margin-bottom:8px">📍 Trouver un terrain (rayon 20 km)</button><div id="mapBox" style="display:none"></div>
+<label for="mtLink">Lien pour annoncer un manque de joueurs</label><input id="mtLink" type="url" placeholder="https://ehadmore.com/#feed">
+<p class="msg" id="mtErr" role="alert"></p>
+<div class="row"><button class="btn alt" id="mtCancel">Annuler</button><button class="btn" id="mtSave">Enregistrer</button></div></div></div>
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+// ===== Langues (FR / EN / ES / HE) =====
+const LANGS={fr:{l:"fr-FR",d:"ltr"},en:{l:"en-GB",d:"ltr"},es:{l:"es-ES",d:"ltr"},he:{l:"he-IL",d:"rtl"}};
+const TR={"Tes matchs entre potes deviennent une vraie saison.": ["Your matches with friends become a real season.", "Tus partidos entre amigos se convierten en una temporada de verdad.", "המשחקים שלכם עם החברים הופכים לעונה אמיתית."], "EN FORME": ["IN FORM", "EN FORMA", "בכושר שיא"], "Milieu": ["Midfielder", "Medio", "קשר"], "TOI": ["YOU", "TÚ", "אתה"], "Une carte qui évolue après chaque match": ["A card that evolves after every match", "Una carta que evoluciona tras cada partido", "קלף שמתפתח אחרי כל משחק"], "Des notes anonymes entre coéquipiers": ["Anonymous ratings between teammates", "Valoraciones anónimas entre compañeros", "דירוגים אנונימיים בין חברי הקבוצה"], "Le podium du mois à partager": ["The monthly podium to share", "El podio del mes para compartir", "פודיום החודש לשיתוף"], "Se connecter": ["Log in", "Iniciar sesión", "התחברות"], "Créer un compte": ["Create an account", "Crear una cuenta", "יצירת חשבון"], "E-mail": ["Email", "Correo electrónico", "אימייל"], "Mot de passe": ["Password", "Contraseña", "סיסמה"], "Afficher": ["Show", "Mostrar", "הצג"], "Masquer": ["Hide", "Ocultar", "הסתר"], "toi@exemple.fr": ["you@example.com", "tu@ejemplo.com", "you@example.com"], "Recevoir un lien de connexion": ["Get a login link", "Recibir un enlace de acceso", "קבלת קישור התחברות"], "Essayer le compte démo": ["Try the demo account", "Probar la cuenta demo", "נסו חשבון דמו"], "Pas encore de compte ?": ["No account yet?", "¿Aún no tienes cuenta?", "אין לכם חשבון?"], "Crée le tien": ["Create yours", "Crea la tuya", "צרו אחד"], "Pseudo": ["Nickname", "Apodo", "כינוי"], "Ton nom sur la carte": ["Your name on the card", "Tu nombre en la carta", "השם שלכם על הקלף"], "Mot de passe (6 caractères minimum)": ["Password (6 characters minimum)", "Contraseña (mínimo 6 caracteres)", "סיסמה (לפחות 6 תווים)"], "Ton niveau (pour ta première carte)": ["Your level (for your first card)", "Tu nivel (para tu primera carta)", "הרמה שלכם (לקלף הראשון)"], "Débutant": ["Beginner", "Principiante", "מתחיל"], "Intermédiaire": ["Intermediate", "Intermedio", "בינוני"], "Confirmé": ["Advanced", "Avanzado", "מתקדם"], "Créer mon compte": ["Create my account", "Crear mi cuenta", "יצירת החשבון שלי"], "Déjà inscrit ?": ["Already registered?", "¿Ya estás registrado?", "כבר רשומים?"], "Connecte-toi": ["Log in", "Inicia sesión", "התחברו"], "Connexion ou création de compte": ["Log in or create an account", "Iniciar sesión o crear una cuenta", "התחברות או יצירת חשבון"], "Langue": ["Language", "Idioma", "שפה"], "Changer de ligue": ["Switch league", "Cambiar de liga", "החלפת ליגה"], "Prochain match": ["Next match", "Próximo partido", "המשחק הבא"], "Composer les équipes": ["Pick the teams", "Formar los equipos", "הרכבת הקבוצות"], "Notes à donner": ["Ratings to give", "Valoraciones pendientes", "דירוגים למילוי"], "Match du 4 oct. · 2 h restantes": ["Match of 4 Oct. · 2 h left", "Partido del 4 oct. · quedan 2 h", "משחק 4 באוק׳ · נותרו שעתיים"], "Noter": ["Rate", "Valorar", "דרגו"], "Derniers résultats": ["Latest results", "Últimos resultados", "תוצאות אחרונות"], "Inviter un pote": ["Invite a friend", "Invitar a un amigo", "הזמינו חבר"], "Code de la ligue :": ["League code:", "Código de la liga:", "קוד הליגה:"], "Match & score": ["Match & score", "Partido y marcador", "משחק ותוצאה"], "Touche un joueur : équipe A, équipe B, puis retiré.": ["Tap a player: team A, team B, then removed.", "Toca a un jugador: equipo A, equipo B y luego se quita.", "הקישו על שחקן: קבוצה A, קבוצה B ואז הסרה."], "Joueurs": ["Players", "Jugadores", "שחקנים"], "Équilibre des équipes": ["Team balance", "Equilibrio de los equipos", "איזון הקבוצות"], "Équipe A": ["Team A", "Equipo A", "קבוצה A"], "Équipe B": ["Team B", "Equipo B", "קבוצה B"], "Équipe": ["Team", "Equipo", "קבוצת"], "Choisis des joueurs pour voir l'équilibre. Indication seulement, rien n'est bloqué.": ["Pick players to see the balance. It's only a hint, nothing is blocked.", "Elige jugadores para ver el equilibrio. Es solo una indicación, nada se bloquea.", "בחרו שחקנים כדי לראות את האיזון. זו רק אינדיקציה, שום דבר לא חסום."], "Équipes équilibrées.": ["Teams are balanced.", "Equipos equilibrados.", "הקבוצות מאוזנות."], "Écart de {d} points : l'équipe {t} est plus forte sur le papier.": ["{d}-point gap: team {t} is stronger on paper.", "Diferencia de {d} puntos: el equipo {t} es más fuerte sobre el papel.", "פער של {d} נקודות: קבוצה {t} חזקה יותר על הנייר."], "Score final": ["Final score", "Marcador final", "תוצאה סופית"], "Moins un but A": ["One goal less for A", "Un gol menos para A", "גול פחות ל-A"], "Plus un but A": ["One more goal for A", "Un gol más para A", "גול נוסף ל-A"], "Moins un but B": ["One goal less for B", "Un gol menos para B", "גול פחות ל-B"], "Plus un but B": ["One more goal for B", "Un gol más para B", "גול נוסף ל-B"], "Valider le score": ["Confirm score", "Validar el marcador", "אישור התוצאה"], "Un joueur de chaque équipe confirme, sinon validation automatique après 12 h.": ["One player from each team confirms, otherwise it is validated automatically after 12 h.", "Un jugador de cada equipo confirma; si no, se valida automáticamente tras 12 h.", "שחקן מכל קבוצה מאשר, אחרת התוצאה מאושרת אוטומטית אחרי 12 שעות."], "Score envoyé. En attente de confirmation (12 h max).": ["Score sent. Waiting for confirmation (12 h max).", "Marcador enviado. Pendiente de confirmación (12 h máx.).", "התוצאה נשלחה. ממתינה לאישור (עד 12 שעות)."], "⏳ à confirmer": ["⏳ to confirm", "⏳ por confirmar", "⏳ ממתין לאישור"], "Aujourd'hui": ["Today", "Hoy", "היום"], "4 oct.": ["4 Oct.", "4 oct.", "4 באוק׳"], "27 sept.": ["27 Sept.", "27 sept.", "27 בספט׳"], "20 sept.": ["20 Sept.", "20 sept.", "20 בספט׳"], "2 oct.": ["2 Oct.", "2 oct.", "2 באוק׳"], "25 sept.": ["25 Sept.", "25 sept.", "25 בספט׳"], "Vestiaire": ["Locker room", "Vestuario", "חדר הלבשה"], "Note tes coéquipiers. Anonyme, 30 secondes.": ["Rate your teammates. Anonymous, 30 seconds.", "Valora a tus compañeros. Anónimo, 30 segundos.", "דרגו את חברי הקבוצה. אנונימי, 30 שניות."], "Vitesse": ["Pace", "Velocidad", "מהירות"], "Tir": ["Shooting", "Tiro", "בעיטה"], "Passe": ["Passing", "Pase", "מסירה"], "Défense": ["Defence", "Defensa", "הגנה"], "Cardio": ["Stamina", "Resistencia", "סיבולת"], "Joueur {i} sur {n}. Laisse « = » si rien à signaler.": ["Player {i} of {n}. Leave “=” if nothing to report.", "Jugador {i} de {n}. Deja «=» si no hay nada que señalar.", "שחקן {i} מתוך {n}. השאירו ”=“ אם אין מה לדווח."], "Baisse": ["Decrease", "Bajada", "ירידה"], "Stable": ["Stable", "Estable", "יציב"], "Hausse": ["Increase", "Subida", "עלייה"], "Suivant": ["Next", "Siguiente", "הבא"], "Homme du match": ["Man of the match", "Jugador del partido", "שחקן המשחק"], "Casserole de la soirée": ["Flop of the night", "El gran fallo de la noche", "הכישלון של הערב"], "Envoyer mes notes": ["Send my ratings", "Enviar mis valoraciones", "שליחת הדירוגים שלי"], "Notes envoyées. Les cartes se mettent à jour quand 3 coéquipiers ont voté.": ["Ratings sent. Cards update once 3 teammates have voted.", "Valoraciones enviadas. Las cartas se actualizan cuando han votado 3 compañeros.", "הדירוגים נשלחו. הקלפים מתעדכנים כש-3 חברי קבוצה הצביעו."], "Profil joueur": ["Player profile", "Perfil del jugador", "פרופיל שחקן"], "3 victoires de suite": ["3 wins in a row", "3 victorias seguidas", "3 ניצחונות ברצף"], "Carte classique": ["Standard card", "Carta clásica", "קלף רגיל"], "5 derniers matchs": ["Last 5 matches", "Últimos 5 partidos", "5 משחקים אחרונים"], "Points du mois": ["Points this month", "Puntos del mes", "נקודות החודש"], "Badges": ["Badges", "Insignias", "תגים"], "Habitué du MVP": ["MVP regular", "Habitual del MVP", "מועמד קבוע ל-MVP"], "En forme": ["In form", "En forma", "בכושר"], "Assidu": ["Regular", "Asiduo", "מופיע קבוע"], "Roi de la casserole": ["King of flops", "Rey de los fallos", "מלך הכישלונות"], "{n} matchs en octobre": ["{n} matches in October", "{n} partidos en octubre", "{n} משחקים באוקטובר"], "Connecté :": ["Signed in:", "Sesión iniciada:", "מחובר:"], "Se déconnecter": ["Log out", "Cerrar sesión", "התנתקות"], "Classement d'octobre": ["October standings", "Clasificación de octubre", "טבלת אוקטובר"], "Victoire 3 pts · Nul 1 pt · MVP +2 · Casserole −1. Classé à partir de 3 matchs joués.": ["Win 3 pts · Draw 1 pt · MVP +2 · Flop −1. Ranked from 3 matches played.", "Victoria 3 pts · Empate 1 pt · MVP +2 · Fallo −1. Clasificado desde 3 partidos jugados.", "ניצחון 3 נק׳ · תיקו נק׳ 1 · MVP‏ ‎+2 · כישלון ‎−1. מדורגים מ-3 משחקים."], "Joueur": ["Player", "Jugador", "שחקן"], "MJ": ["MP", "PJ", "מש׳"], "Pts": ["Pts", "Pts", "נק׳"], "Moy.": ["Avg.", "Prom.", "ממוצע"], "Palmarès du mois": ["Monthly honours", "Palmarés del mes", "הישגי החודש"], "Champion": ["Champion", "Campeón", "אלוף"], "Plus régulier": ["Most consistent", "Más regular", "הכי עקבי"], "Soulier de plomb": ["Lead boots", "Pies de plomo", "נעלי עופרת"], "Créer la story du podium": ["Create the podium story", "Crear la story del podio", "יצירת סטורי הפודיום"], "Bilan d'octobre 2026": ["October 2026 review", "Balance de octubre 2026", "סיכום אוקטובר 2026"], "Champion du mois": ["Champion of the month", "Campeón del mes", "אלוף החודש"], "Fermer": ["Close", "Cerrar", "סגירה"], "Aperçu : l'export image sera ajouté dans la version finale.": ["Preview: image export will be added in the final version.", "Vista previa: la exportación a imagen se añadirá en la versión final.", "תצוגה מקדימה: ייצוא כתמונה יתווסף בגרסה הסופית."], "Accueil": ["Home", "Inicio", "בית"], "Match": ["Match", "Partido", "משחק"], "Profil": ["Profile", "Perfil", "פרופיל"], "Classement": ["Standings", "Clasificación", "טבלה"], "Mes ligues": ["My leagues", "Mis ligas", "הליגות שלי"], "Rejoindre avec un code": ["Join with a code", "Unirse con un código", "הצטרפות עם קוד"], "Ex. JEU-3057": ["e.g. JEU-3057", "Ej. JEU-3057", "לדוגמה JEU-3057"], "Code d'invitation": ["Invitation code", "Código de invitación", "קוד הזמנה"], "Rejoindre": ["Join", "Unirse", "הצטרפות"], "Créer une ligue": ["Create a league", "Crear una liga", "יצירת ליגה"], "Nom de la ligue": ["League name", "Nombre de la liga", "שם הליגה"], "Créer": ["Create", "Crear", "יצירה"], "{n} joueurs": ["{n} players", "{n} jugadores", "{n} שחקנים"], "Organisateur": ["Organiser", "Organizador", "מארגן"], "Ligue active :": ["Active league:", "Liga activa:", "ליגה פעילה:"], "Ligue": ["League", "Liga", "ליגה"], "Saisis un code d'invitation.": ["Enter an invitation code.", "Introduce un código de invitación.", "הזינו קוד הזמנה."], "Donne un nom à ta ligue.": ["Give your league a name.", "Dale un nombre a tu liga.", "תנו שם לליגה שלכם."], "Saisis une adresse e-mail valide.": ["Enter a valid email address.", "Introduce un correo electrónico válido.", "הזינו כתובת אימייל תקינה."], "E-mail ou mot de passe incorrect.": ["Incorrect email or password.", "Correo o contraseña incorrectos.", "אימייל או סיסמה שגויים."], "Saisis ton e-mail pour recevoir le lien.": ["Enter your email to receive the link.", "Introduce tu correo para recibir el enlace.", "הזינו את האימייל כדי לקבל את הקישור."], "Lien envoyé à {e} (démo : aucun e-mail réel n'est envoyé).": ["Link sent to {e} (demo: no real email is sent).", "Enlace enviado a {e} (demo: no se envía ningún correo real).", "קישור נשלח אל {e} (דמו: לא נשלח אימייל אמיתי)."], "Le pseudo doit faire au moins 2 caractères.": ["The nickname must be at least 2 characters.", "El apodo debe tener al menos 2 caracteres.", "הכינוי חייב להכיל לפחות 2 תווים."], "Le pseudo contient des caractères interdits.": ["The nickname contains forbidden characters.", "El apodo contiene caracteres no permitidos.", "הכינוי מכיל תווים אסורים."], "Ce pseudo est déjà pris. Choisis-en un autre.": ["This nickname is taken. Pick another one.", "Este apodo ya está en uso. Elige otro.", "הכינוי תפוס. בחרו כינוי אחר."], "Un compte existe déjà avec cet e-mail. Connecte-toi.": ["An account already exists with this email. Log in.", "Ya existe una cuenta con este correo. Inicia sesión.", "כבר קיים חשבון עם האימייל הזה. התחברו."], "Le mot de passe doit contenir au moins 6 caractères.": ["The password must be at least 6 characters.", "La contraseña debe tener al menos 6 caracteres.", "הסיסמה חייבת להכיל לפחות 6 תווים."], "Bienvenue, {n} !": ["Welcome, {n}!", "¡Bienvenido, {n}!", "ברוכים הבאים, {n}!"], "Joueurs de la ligue": ["League players", "Jugadores de la liga", "שחקני הליגה"], "supprimer": ["delete", "eliminar", "למחוק"], "(historique perdu)": ["(history lost)", "(historial perdido)", "(ההיסטוריה תימחק)"], "Oui": ["Yes", "Sí", "כן"], "Non": ["No", "No", "לא"], "Supprimer": ["Delete", "Eliminar", "מחיקת"], "confirmé pour le prochain match.": ["confirmed for the next match.", "confirmado para el próximo partido.", "אישרו הגעה למשחק הבא."], "Touche un nom pour changer sa présence, ✕ pour supprimer un joueur.": ["Tap a name to change attendance, ✕ to delete a player.", "Toca un nombre para cambiar su asistencia, ✕ para eliminar a un jugador.", "הקישו על שם כדי לשנות הגעה, ✕ כדי למחוק שחקן."], "Ajouter un joueur (un à la fois)": ["Add a player (one at a time)", "Añadir un jugador (de uno en uno)", "הוספת שחקן (אחד בכל פעם)"], "Pseudo du joueur": ["Player nickname", "Apodo del jugador", "כינוי השחקן"], "Ajouter": ["Add", "Añadir", "הוספה"], "Seul l'organisateur peut gérer les joueurs.": ["Only the organiser can manage players.", "Solo el organizador puede gestionar a los jugadores.", "רק המארגן יכול לנהל שחקנים."], "{n} fait déjà partie de cette ligue.": ["{n} is already in this league.", "{n} ya forma parte de esta liga.", "{n} כבר נמצא בליגה הזו."], "{n} est déjà inscrit sur le site. Demande-lui de rejoindre la ligue avec le code {c}.": ["{n} is already registered on the site. Ask them to join the league with the code {c}.", "{n} ya está registrado en el sitio. Pídele que se una a la liga con el código {c}.", "{n} כבר רשום באתר. בקשו ממנו להצטרף לליגה עם הקוד {c}."], "{n} a été ajouté à {l}": ["{n} was added to {l}", "{n} se ha añadido a {l}", "{n} נוסף ל-{l}"], "{n} a été supprimé de la ligue": ["{n} was removed from the league", "{n} se ha eliminado de la liga", "{n} הוסר מהליגה"], "Aucun match pour l'instant. Compose les équipes pour lancer la saison.": ["No matches yet. Pick the teams to start the season.", "Aún no hay partidos. Forma los equipos para empezar la temporada.", "עדיין אין משחקים. הרכיבו קבוצות כדי להתחיל את העונה."], "Date à définir": ["Date to be set", "Fecha por definir", "תאריך יוגדר"], "Lieu à définir": ["Venue to be set", "Lugar por definir", "מיקום יוגדר"], "Format": ["Format", "Formato", "פורמט"], "Confirmés : {g}/{need} · format {f}": ["Confirmed: {g}/{need} · {f} format", "Confirmados: {g}/{need} · formato {f}", "אישרו: {g}/{need} · פורמט {f}"], "Format prévu : {f} ({need} joueurs).": ["Planned format: {f} ({need} players).", "Formato previsto: {f} ({need} jugadores).", "פורמט מתוכנן: {f} ({need} שחקנים)."], "Il manque {x} joueur(s)": ["{x} player(s) missing", "Faltan {x} jugador(es)", "חסרים {x} שחקנים"], "Il manque {x} joueur(s) !": ["{x} player(s) missing!", "¡Faltan {x} jugador(es)!", "חסרים {x} שחקנים!"], "Publier une annonce": ["Post an announcement", "Publicar un anuncio", "פרסום מודעה"], "Ajoute un lien d'annonce dans les paramètres du match.": ["Add an announcement link in the match settings.", "Añade un enlace de anuncio en los ajustes del partido.", "הוסיפו קישור למודעות בהגדרות המשחק."], "L'organisateur n'a pas encore ajouté de lien d'annonce.": ["The organiser hasn't added an announcement link yet.", "El organizador aún no ha añadido un enlace de anuncio.", "המארגן עוד לא הוסיף קישור למודעות."], "Copier le texte": ["Copy the text", "Copiar el texto", "העתקת הטקסט"], "Équipes complètes": ["Teams complete", "Equipos completos", "הקבוצות מלאות"], "Je participe": ["I'm in", "Participo", "אני משתתף"], "Modifier le match": ["Edit match", "Modificar el partido", "עריכת המשחק"], "Match de foot {f}": ["Football match {f}", "Partido de fútbol {f}", "משחק כדורגל {f}"], "Niveau amateur, ambiance entre potes. Réponds ici si tu es partant.": ["Amateur level, friendly vibe. Reply here if you're in.", "Nivel amateur, ambiente entre amigos. Responde aquí si te apuntas.", "רמה חובבנית, אווירה חברית. הגיבו כאן אם אתם בעניין."], "Texte de l'annonce copié": ["Announcement text copied", "Texto del anuncio copiado", "טקסט המודעה הועתק"], "Copie impossible. Texte :": ["Copy failed. Text:", "No se pudo copiar. Texto:", "ההעתקה נכשלה. טקסט:"], "Date": ["Date", "Fecha", "תאריך"], "Heure": ["Time", "Hora", "שעה"], "Lieu": ["Venue", "Lugar", "מיקום"], "Ex. Stade Municipal": ["e.g. Municipal Stadium", "Ej. Estadio Municipal", "לדוגמה אצטדיון עירוני"], "Lien pour annoncer un manque de joueurs": ["Link to announce missing players", "Enlace para anunciar falta de jugadores", "קישור לפרסום חוסר בשחקנים"], "Annuler": ["Cancel", "Cancelar", "ביטול"], "Enregistrer": ["Save", "Guardar", "שמירה"], "Choisis une date.": ["Pick a date.", "Elige una fecha.", "בחרו תאריך."], "Le lien n'est pas valide. Exemple :": ["The link is not valid. Example:", "El enlace no es válido. Ejemplo:", "הקישור אינו תקין. לדוגמה:"], "Prochain match mis à jour": ["Next match updated", "Próximo partido actualizado", "המשחק הבא עודכן"], "Retour": ["Back", "Volver", "חזרה"], "Touche un match pour voir les buts, les compos et noter tes coéquipiers.": ["Tap a match to see goals, line-ups and rate your teammates.", "Toca un partido para ver los goles, las alineaciones y valorar a tus compañeros.", "הקישו על משחק כדי לראות שערים והרכבים ולדרג את חברי הקבוצה."], "Détail du match": ["Match details", "Detalle del partido", "פרטי המשחק"], "Compositions et temps de jeu": ["Line-ups & playing time", "Alineaciones y tiempo de juego", "הרכבים וזמן משחק"], "Buts et passes décisives": ["Goals & assists", "Goles y asistencias", "שערים ובישולים"], "Aucun but saisi pour ce match.": ["No goals entered for this match.", "No se ha registrado ningún gol en este partido.", "לא הוזנו שערים למשחק זה."], "Durée : {n} min": ["Duration: {n} min", "Duración: {n} min", "משך: {n} דק׳"], "passe de": ["assist by", "asistencia de", "בישול של"], "Sans passeur": ["No assist", "Sin asistente", "ללא מבשל"], "Ajouter un but": ["Add a goal", "Añadir un gol", "הוספת שער"], "Minute": ["Minute", "Minuto", "דקה"], "Buteur": ["Scorer", "Goleador", "מבקיע"], "Passeur": ["Assist", "Asistente", "מבשל"], "Ajouter le but": ["Add goal", "Añadir gol", "הוספת שער"], "But ajouté": ["Goal added", "Gol añadido", "השער נוסף"], "Minute invalide (1 à {n}).": ["Invalid minute (1 to {n}).", "Minuto no válido (1 a {n}).", "דקה לא תקינה (1 עד {n})."], "Choisis un buteur.": ["Pick a scorer.", "Elige un goleador.", "בחרו מבקיע."], "Noter mes coéquipiers": ["Rate my teammates", "Valorar a mis compañeros", "דירוג חברי הקבוצה שלי"], "Tu n'as pas joué ce match : tu ne peux pas noter.": ["You didn't play this match, so you can't rate.", "No jugaste este partido, así que no puedes valorar.", "לא שיחקת במשחק הזה ולכן אי אפשר לדרג."], "✓ Notes envoyées": ["✓ Ratings sent", "✓ Valoraciones enviadas", "✓ הדירוגים נשלחו"], "Mettre à jour mes notes": ["Update my ratings", "Actualizar mis valoraciones", "עדכון הדירוגים שלי"], "Détail des buts incomplet : {a}–{b} saisis sur {c}–{d}.": ["Goal details incomplete: {a}–{b} entered out of {c}–{d}.", "Detalle de goles incompleto: {a}–{b} registrados de {c}–{d}.", "פירוט השערים חלקי: הוזנו {a}–{b} מתוך {c}–{d}."], "Pas de coéquipiers à noter.": ["No teammates to rate.", "No hay compañeros que valorar.", "אין חברי קבוצה לדרג."], "à noter": ["to rate", "por valorar", "לדרג"], "✓ noté": ["✓ rated", "✓ valorado", "✓ דורג"], "Stats": ["Stats", "Estadísticas", "סטטיסטיקות"], "Chat": ["Chat", "Chat", "צ׳אט"], "Buteurs": ["Scorers", "Goleadores", "מבקיעים"], "Passeurs": ["Assists", "Asistentes", "מבשלים"], "Gardiens": ["Goalkeepers", "Porteros", "שוערים"], "Meilleurs buteurs": ["Top scorers", "Máximos goleadores", "מלכי השערים"], "Meilleurs passeurs": ["Top assisters", "Máximos asistentes", "מלכי הבישולים"], "Meilleurs gardiens": ["Best goalkeepers", "Mejores porteros", "השוערים הטובים"], "Pas encore de données.": ["No data yet.", "Aún no hay datos.", "אין עדיין נתונים."], "{c} buts encaissés / match · {mp} matchs": ["{c} goals conceded / match · {mp} matches", "{c} goles encajados / partido · {mp} partidos", "{c} שערים נספגו למשחק · {mp} משחקים"], "Note moyenne donnée par les coéquipiers (1 à 5 étoiles).": ["Average rating from teammates (1 to 5 stars).", "Nota media dada por los compañeros (1 a 5 estrellas).", "ציון ממוצע מחברי הקבוצה (1 עד 5 כוכבים)."], "Gardien": ["Goalkeeper", "Portero", "שוער"], "Défenseur": ["Defender", "Defensa", "מגן"], "Attaquant": ["Forward", "Delantero", "חלוץ"], "Note sa performance dans les buts": ["Rate his performance in goal", "Valora su actuación en la portería", "דרגו את הביצוע שלו בשער"], "Sondage : quelle date ?": ["Poll: which date?", "Encuesta: ¿qué fecha?", "סקר: איזה תאריך?"], "Confirmer cette date": ["Confirm this date", "Confirmar esta fecha", "אישור התאריך"], "Touche une date pour voter (plusieurs choix possibles).": ["Tap a date to vote (multiple choices allowed).", "Toca una fecha para votar (varias opciones posibles).", "הקישו על תאריך כדי להצביע (אפשר כמה)."], "Date confirmée :": ["Date confirmed:", "Fecha confirmada:", "התאריך נקבע:"], "Nouveau sondage": ["New poll", "Nueva encuesta", "סקר חדש"], "Propose 2 à 4 dates : chacun votera.": ["Suggest 2 to 4 dates: everyone will vote.", "Propón de 2 a 4 fechas: todos votarán.", "הציעו 2 עד 4 תאריכים: כולם יצביעו."], "Lancer le sondage": ["Launch the poll", "Lanzar la encuesta", "פתיחת הסקר"], "Aucun sondage en cours.": ["No poll in progress.", "No hay ninguna encuesta en curso.", "אין סקר פעיל."], "Ajoute au moins 2 dates.": ["Add at least 2 dates.", "Añade al menos 2 fechas.", "הוסיפו לפחות 2 תאריכים."], "Sondage lancé": ["Poll launched", "Encuesta lanzada", "הסקר נפתח"], "Chat de la ligue": ["League chat", "Chat de la liga", "צ׳אט הליגה"], "Écris un message…": ["Write a message…", "Escribe un mensaje…", "כתבו הודעה…"], "Message": ["Message", "Mensaje", "הודעה"], "Envoyer": ["Send", "Enviar", "שליחה"], "Aucun message. Lance la discussion !": ["No messages yet. Start the conversation!", "Aún no hay mensajes. ¡Empieza la conversación!", "אין הודעות עדיין. התחילו שיחה!"], "Hier": ["Yesterday", "Ayer", "אתמול"], "📍 Trouver un terrain (rayon 20 km)": ["📍 Find a pitch (20 km radius)", "📍 Buscar un campo (radio de 20 km)", "📍 חיפוש מגרש (ברדיוס 20 ק״מ)"], "Recherche des terrains…": ["Searching for pitches…", "Buscando campos…", "מחפש מגרשים…"], "Carte des terrains": ["Map of pitches", "Mapa de campos", "מפת מגרשים"], "Toi": ["You", "Tú", "אתה"], "Terrain sans nom": ["Unnamed pitch", "Campo sin nombre", "מגרש ללא שם"], "Source : OpenStreetMap (terrains de football répertoriés dans un rayon de 20 km).": ["Source: OpenStreetMap (football pitches listed within 20 km).", "Fuente: OpenStreetMap (campos de fútbol registrados en un radio de 20 km).", "מקור: OpenStreetMap (מגרשי כדורגל רשומים ברדיוס 20 ק״מ)."], "Données de démonstration. La carte en direct se charge depuis OpenStreetMap quand le site est ouvert avec une connexion et la position autorisée.": ["Demo data. The live map loads from OpenStreetMap when the site is opened online with location allowed.", "Datos de demostración. El mapa en vivo se carga desde OpenStreetMap cuando el sitio se abre con conexión y ubicación permitida.", "נתוני הדגמה. המפה החיה נטענת מ-OpenStreetMap כשהאתר נפתח עם חיבור ואישור מיקום."], "Mon profil": ["My profile", "Mi perfil", "הפרופיל שלי"], "Modifier mon profil": ["Edit my profile", "Editar mi perfil", "עריכת הפרופיל שלי"], "Photo de profil (facultatif)": ["Profile photo (optional)", "Foto de perfil (opcional)", "תמונת פרופיל (לא חובה)"], "Retirer la photo": ["Remove photo", "Quitar la foto", "הסרת התמונה"], "Poste": ["Position", "Posición", "עמדה"], "Nouveau mot de passe (laisser vide pour ne pas changer)": ["New password (leave empty to keep it)", "Nueva contraseña (déjala vacía para no cambiarla)", "סיסמה חדשה (השאירו ריק כדי לא לשנות)"], "Profil mis à jour": ["Profile updated", "Perfil actualizado", "הפרופיל עודכן"], "Image invalide ou trop lourde (5 Mo max).": ["Invalid or too large image (5 MB max).", "Imagen no válida o demasiado pesada (5 MB máx.).", "תמונה לא תקינה או כבדה מדי (עד 5MB)."], "Version démo : tes données sont enregistrées sur cet appareil uniquement.": ["Demo version: your data is saved on this device only.", "Versión de demostración: tus datos se guardan solo en este dispositivo.", "גרסת הדגמה: הנתונים שלכם נשמרים במכשיר זה בלבד."]}; // clé = texte français -> [EN, ES, HE]
+const ABR={"fr": ["VIT", "TIR", "PAS", "DÉF", "CAR"], "en": ["PAC", "SHO", "PAS", "DEF", "STA"], "es": ["VEL", "TIR", "PAS", "DEF", "RES"], "he": ["מהי", "בעט", "מסר", "הגנ", "סבל"]}, HL={"fr": {"V": "V", "N": "N", "D": "D"}, "en": {"V": "W", "N": "D", "D": "L"}, "es": {"V": "G", "N": "E", "D": "P"}, "he": {"V": "נ", "N": "ת", "D": "ה"}};
+let LANG="fr";try{const sv=localStorage.getItem("lang");if(sv&&LANGS[sv])LANG=sv}catch(_){}
+const tt=(k,v)=>{let s=LANG==="fr"||!TR[k]?k:TR[k][{en:0,es:1,he:2}[LANG]];if(v)for(const x in v)s=s.split("{"+x+"}").join(v[x]);return s};
+const POS0={Karim:"Milieu",Yanis:"Attaquant",Mehdi:"Défenseur",Lucas:"Attaquant",Théo:"Attaquant",Antoine:"Défenseur",Sofiane:"Milieu",Bastien:"Défenseur",Hugo:"Milieu",Malik:"Gardien",Nico:"Attaquant",Sarah:"Milieu",Pierre:"Défenseur",Julie:"Attaquant",Adil:"Milieu",Marc:"Gardien",Léa:"Attaquant"};
+const POSL=["Gardien","Défenseur","Milieu","Attaquant"];
+let CUR=null;const PH={};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const av=(n,c)=>PH[n]?`<img class="${c}" src="${PH[n]}" alt="">`:`<span class="${c} fi">${esc((n||"?")[0].toUpperCase())}</span>`;
+const stars=v=>`<div class="stars" role="group" aria-label="${tt("Gardien")}">${[1,2,3,4,5].map(i=>`<button data-s="${i}" class="${i<=v?"on":""}" aria-label="${i}/5">★</button>`).join("")}</div>`;
+const gkOf=A=>A.find(n=>{const p=P.find(x=>x.n===n);return p&&p.pos==="Gardien"})||null;
+function myGk(){const d=results[0]&&results[0][6];if(!d||!d.gk)return null;const t=d.A.includes(ME)?"A":d.B.includes(ME)?"B":null;return t&&d.gk[t]&&d.gk[t]!==ME?d.gk[t]:null}
+const vstore=d=>d.v||(d.v={r:{},mvp:null,cas:null,sent:false});
+const V0={r:{},mvp:null,cas:null,sent:false};
+const VS=()=>{const d=results[0]&&results[0][6];return d?vstore(d):V0};
+function curMates(){const d=results[0]&&results[0][6];if(d){const t=d.A.includes(ME)?d.A:d.B.includes(ME)?d.B:null;if(t)return t.filter(x=>x!==ME&&P.some(p=>p.n===x))}return L.mates.filter(x=>P.some(p=>p.n===x))}
+const tn=x=>x.replace(/^(Équipe|Éq\.) /,tt("Équipe")+" ");
+const ATT=["Vitesse","Tir","Passe","Défense","Cardio"];
+const L0=[
+["Karim",[82,78,74,60,76],"VVVNV",18,3,1,6],["Yanis",[75,70,80,66,72],"VNVVD",13,1,0,6],["Mehdi",[68,60,70,84,78],"DVVVV",15,2,0,5],
+["Lucas",[70,82,65,55,68],"NDVDV",9,1,2,6],["Théo",[88,66,62,52,80],"VDNVV",12,0,0,5],["Antoine",[60,58,72,74,70],"DDNVD",5,0,2,4],
+["Sofiane",[72,76,76,62,66],"VVDNV",11,2,1,6],["Bastien",[64,54,68,78,74],"NVVDD",8,0,1,5],["Hugo",[78,72,66,58,64],"DVNVN",7,1,0,3],
+["Malik",[66,68,78,70,72],"VNDVV",10,1,1,6]
+];
+const mkP=a=>a.map(a=>({n:a[0],s:a[1],h:a[2],pts:a[3],mvp:a[4],cas:a[5],mj:a[6],pos:POS0[a[0]]||(a[0]===ME&&CUR&&CUR.pos)||"Milieu"}));
+const L1=[["Karim",[74,68,72,70,66],"NVDVN",8,0,1,4],["Nico",[80,76,70,58,74],"NVVVV",13,3,0,5],["Sarah",[72,70,78,64,70],"VNVVD",11,1,0,5],["Pierre",[66,60,66,80,72],"DNVDV",6,0,1,4],["Julie",[78,66,74,60,76],"VDVVN",10,1,0,5],["Adil",[62,74,68,62,64],"NDDVN",4,0,2,4],["Marc",[70,64,64,76,68],"DVNND",5,1,0,3],["Léa",[76,70,80,56,72],"VVVDV",12,2,1,5]];
+const LG=[
+{name:"Les Potes du Dimanche",emoji:"⚽",code:"DIM-4821",meta:"Dimanche 10h · Stade Municipal",match:{date:"2026-10-11",time:"10:00",place:"Stade Municipal",size:5,link:"https://ehadmore.com/#feed",going:["Karim","Yanis","Mehdi","Lucas","Théo","Sofiane","Bastien","Hugo","Malik"]},P:mkP(L0),res:[["Équipe Karim","Équipe Yanis",4,2,"4 oct.",null,{dur:60,A:["Karim","Mehdi","Théo","Hugo","Malik"],B:["Yanis","Lucas","Antoine","Sofiane","Bastien"],ev:[{m:7,t:"A",s:"Karim",a:"Mehdi"},{m:15,t:"B",s:"Lucas",a:"Yanis"},{m:23,t:"A",s:"Théo",a:"Karim"},{m:34,t:"A",s:"Karim",a:"Malik"},{m:41,t:"B",s:"Sofiane",a:null},{m:55,t:"A",s:"Hugo",a:"Théo"}],min:{Hugo:45,Bastien:38},gk:{A:"Malik",B:"Bastien"},gkr:{A:[4,5,3,4],B:[3,3,4]}}],
+["Équipe Mehdi","Équipe Lucas",3,3,"27 sept.",null,{dur:60,A:["Mehdi","Karim","Sofiane","Hugo","Antoine"],B:["Lucas","Théo","Yanis","Malik","Bastien"],ev:[{m:5,t:"B",s:"Théo",a:"Lucas"},{m:12,t:"A",s:"Sofiane",a:"Mehdi"},{m:25,t:"A",s:"Karim",a:"Sofiane"},{m:31,t:"B",s:"Lucas",a:null},{m:44,t:"B",s:"Théo",a:"Malik"},{m:58,t:"A",s:"Mehdi",a:"Karim"}],min:{Antoine:50},gk:{A:"Antoine",B:"Malik"},gkr:{A:[3,4,3],B:[4,4,5]}}],
+["Équipe Théo","Équipe Sofiane",1,2,"20 sept.",null,{dur:60,A:["Théo","Karim","Malik","Bastien","Hugo"],B:["Sofiane","Mehdi","Yanis","Lucas","Antoine"],ev:[{m:18,t:"B",s:"Mehdi",a:"Sofiane"},{m:30,t:"A",s:"Théo",a:"Karim"},{m:52,t:"B",s:"Sofiane",a:"Yanis"}],min:{},gk:{A:"Malik",B:"Antoine"},gkr:{A:[5,4,4],B:[3,4,3]}}]],mates:["Yanis","Mehdi","Sofiane","Malik"],role:"Organisateur",chat:[{n:"Yanis",d:"Hier",t:"18:30",x:"Qui est chaud pour dimanche ?"},{n:"Mehdi",d:"Hier",t:"18:32",x:"Présent ! Je prends les chasubles 🙌"},{n:"Lucas",d:"Hier",t:"19:05",x:"Il nous faut un vrai gardien cette fois non ?"},{n:"Malik",d:"Hier",t:"19:10",x:"Je reste dans les buts, mais je veux la revanche 😤"},{n:"Karim",d:"Hier",t:"19:12",x:"Ok, votez pour la date sur l'accueil et on cale ça !"}],poll:{open:true,chosen:null,opts:[{d:"2026-10-18",t:"10:00",v:["Karim","Yanis","Mehdi","Théo"]},{d:"2026-10-18",t:"17:00",v:["Lucas","Malik"]},{d:"2026-10-25",t:"10:00",v:["Hugo","Sofiane","Yanis"]}]}},
+{name:"Foot du Jeudi – Bureau",emoji:"💼",code:"JEU-3057",meta:"Jeudi 19h · Five du quartier",match:{date:"2026-10-15",time:"19:00",place:"Five du quartier",size:4,link:"https://ehadmore.com/#feed",going:["Karim","Nico","Sarah","Julie","Léa","Marc"]},P:mkP(L1),res:[["Équipe Nico","Équipe Léa",5,4,"2 oct.",null,{dur:50,A:["Nico","Karim","Sarah","Pierre"],B:["Léa","Julie","Adil","Marc"],ev:[{m:4,t:"A",s:"Nico",a:"Karim"},{m:9,t:"B",s:"Léa",a:"Julie"},{m:14,t:"A",s:"Nico",a:null},{m:19,t:"B",s:"Julie",a:"Léa"},{m:26,t:"A",s:"Sarah",a:"Nico"},{m:31,t:"B",s:"Léa",a:"Marc"},{m:38,t:"A",s:"Karim",a:"Pierre"},{m:43,t:"B",s:"Adil",a:"Léa"},{m:47,t:"A",s:"Nico",a:"Sarah"}],min:{Marc:30},gk:{A:"Pierre",B:"Marc"},gkr:{A:[3,4],B:[2,3,3]}}],
+["Équipe Sarah","Équipe Adil",2,2,"25 sept.",null,{dur:50,A:["Sarah","Karim","Julie","Marc"],B:["Adil","Nico","Pierre","Léa"],ev:[{m:10,t:"A",s:"Julie",a:"Sarah"},{m:22,t:"B",s:"Nico",a:"Adil"},{m:35,t:"A",s:"Karim",a:null},{m:48,t:"B",s:"Adil",a:"Pierre"}],min:{},gk:{A:"Marc",B:"Pierre"},gkr:{A:[4,3],B:[4,5,4]}}]],mates:["Nico","Sarah","Léa"],role:"Joueur",chat:[{n:"Nico",d:"Hier",t:"12:15",x:"Jeudi prochain on est combien ?"},{n:"Sarah",d:"Hier",t:"12:20",x:"Moi je viens, j'amène un ballon"},{n:"Léa",d:"Hier",t:"12:41",x:"Pareil ⚽"}],poll:{open:true,chosen:null,opts:[{d:"2026-10-22",t:"19:00",v:["Nico","Sarah","Julie"]},{d:"2026-10-29",t:"19:00",v:["Léa","Marc"]}]}}
+];
+let L=LG[0],P=L.P;
+const SEED=JSON.stringify(LG);
+const ovr=p=>Math.round(p.s.reduce((a,b)=>a+b,0)/5);
+let ME="Karim";const MONTH_MATCHES=6, MIN=3;
+let results=[["Équipe Karim","Équipe Yanis",4,2,"4 oct."],["Équipe Mehdi","Équipe Lucas",3,3,"27 sept."],["Équipe Théo","Équipe Sofiane",1,2,"20 sept."]];
+function renderResults(){if(!results.length){$("#results").innerHTML=`<p class="sub">${tt("Aucun match pour l'instant. Compose les équipes pour lancer la saison.")}</p>`;return}$("#results").innerHTML=results.map((r,i)=>`<div class="rw" data-i="${i}" tabindex="0" role="button">`+`<div class="res"><span>${tn(r[0])}</span><b class="num score" style="font-size:26px">${r[2]} – ${r[3]}</b><span>${tn(r[1])}</span></div>`+(r[5]?`<div class="sub" style="margin-top:-6px">${tt(r[4])} · ${tt(r[5])}</div>`:`<div class="sub" style="margin-top:-6px">${tt(r[4])}</div>`)+`</div>`).join("")}
+// navigation
+function go(id){$$(".screen").forEach(s=>s.classList.toggle("on",s.id===id));$$("nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===(id==="detail"?"home":id)));$("main").scrollTop=0;if(id==="profil")renderProfil(cur);if(id==="chat")renderChat();if(id==="rank")renderStats()}
+document.addEventListener("click",e=>{const g=e.target.closest("[data-go]");if(g){if(g.dataset.go==="profil"&&g.closest("nav"))cur=ME;go(g.dataset.go)}});
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("on"),2600)}
+// match
+const sel={},sc={A:0,B:0};
+$("#pick").innerHTML=P.map(p=>`<button class="chip" data-n="${p.n}">${p.n}</button>`).join("");
+$("#pick").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;const n=b.dataset.n,c=sel[n];if(!c)sel[n]="A";else if(c==="A")sel[n]="B";else delete sel[n];b.className="chip"+(sel[n]?" "+sel[n]:"");bal()};
+function avg(t){const l=P.filter(p=>sel[p.n]===t);return l.length?Math.round(l.reduce((a,p)=>a+ovr(p),0)/l.length):0}
+function bal(){const a=avg("A"),b=avg("B"),nA=Object.values(sel).filter(v=>v==="A").length,nB=Object.values(sel).filter(v=>v==="B").length;
+$("#avA").textContent=a||"–";$("#avB").textContent=b||"–";
+if(a&&b){$("#balbar").style.width=(a/(a+b)*100)+"%";const d=Math.abs(a-b);$("#baltxt").textContent=d<=2?tt("Équipes équilibrées."):tt("Écart de {d} points : l'équipe {t} est plus forte sur le papier.",{d,t:a>b?"A":"B"})}else $("#baltxt").textContent=tt("Choisis des joueurs pour voir l'équilibre. Indication seulement, rien n'est bloqué.");
+$("#validate").disabled=!(nA>=2&&nB>=2)}
+$$(".step button").forEach(b=>b.onclick=()=>{const t=b.dataset.s;sc[t]=Math.max(0,sc[t]+ +b.dataset.d);$("#s"+t).textContent=sc[t]});
+$("#validate").onclick=()=>{const A=Object.keys(sel).filter(k=>sel[k]==="A"),B=Object.keys(sel).filter(k=>sel[k]==="B");
+results.unshift(["Éq. "+A[0],"Éq. "+B[0],sc.A,sc.B,"Aujourd'hui","⏳ à confirmer",{dur:60,A:[...A],B:[...B],ev:[],min:{},gk:{A:gkOf(A),B:gkOf(B)},gkr:{A:[],B:[]}}]);mates=curMates();vi=0;renderVest();renderResults();toast(tt("Score envoyé. En attente de confirmation (12 h max)."));go("home")};
+// vestiaire
+let mates=[];let vi=0;
+function renderVest(){const n=mates.length;$("#dots").innerHTML=Array.from({length:n+1},(_,i)=>`<i class="${i<=vi?"on":""}"></i>`).join("");
+const b=$("#vbody");
+if(vi<n){const m=mates[vi],VR=VS().r;VR[m]=VR[m]||{};
+b.innerHTML=`<div class="card"><h2 style="margin:0 0 4px">${m}</h2><p class="sub">${tt("Joueur {i} sur {n}. Laisse « = » si rien à signaler.",{i:vi+1,n})}</p>`+ATT.map(a=>{const v=VR[m][a]||0;return `<div class="attr"><span>${tt(a)}</span><div class="seg" data-a="${a}"><button class="dn ${v<0?"on":""}" data-v="-1" aria-label="${tt("Baisse")} ${tt(a)}">−</button><button class="eq ${v==0?"on":""}" data-v="0" aria-label="${tt("Stable")} ${tt(a)}">=</button><button class="up ${v>0?"on":""}" data-v="1" aria-label="${tt("Hausse")} ${tt(a)}">+</button></div></div>`}).join("")+(m===myGk()?`<div class="attr" style="display:block"><span>🧤 ${tt("Gardien")}</span><p class="sub" style="margin:2px 0">${tt("Note sa performance dans les buts")}</p>${stars(VS().gk||0)}</div>`:"")+`</div><button class="btn" id="nx">${tt("Suivant")}</button>`;
+$$("#vbody .stars button").forEach(x=>x.onclick=()=>{VS().gk=+x.dataset.s;renderVest()});$$("#vbody .seg button").forEach(x=>x.onclick=()=>{VR[m][x.parentNode.dataset.a]=+x.dataset.v;renderVest()});$("#nx").onclick=()=>{vi++;renderVest()}}
+else{const pk=(t,k)=>`<div class="chips">`+[ME,...mates].map(p=>`<button class="chip ${(t==="mvp"?VS().mvp:VS().cas)===p?(t==="mvp"?"A":"B"):""}" data-t="${t}" data-p="${p}">${p}</button>`).join("")+`</div>`;
+b.innerHTML=`<div class="card"><h3 style="font-size:22px">⭐ ${tt("Homme du match")}</h3>${pk("mvp")}</div><div class="card"><h3 style="font-size:22px">🥘 ${tt("Casserole de la soirée")}</h3>${pk("cas")}</div><button class="btn" id="send">${VS().sent?tt("Mettre à jour mes notes"):tt("Envoyer mes notes")}</button>`;
+$$("#vbody .chip").forEach(c=>c.onclick=()=>{if(c.dataset.t==="mvp")VS().mvp=c.dataset.p;else VS().cas=c.dataset.p;renderVest()});
+$("#send").onclick=()=>{toast(tt("Notes envoyées. Les cartes se mettent à jour quand 3 coéquipiers ont voté."));VS().sent=true;vi=0;renderVest();go("home")}}}
+renderVest();
+// profil
+let cur="Karim";
+function renderProfil(n){cur=n;const p=P.find(x=>x.n===n),form=/VVV$/.test(p.h);
+$("#profil").innerHTML=`<h1>${n===ME?tt("Mon profil"):tt("Profil joueur")}</h1>
+<div class="chips" style="margin:10px 0 16px">${P.map(x=>`<button class="chip ${x.n===n?"A":""}" data-pp="${x.n}">${x.n}</button>`).join("")}</div>
+<div class="two"><div><div class="fut ${form?"form":""}"><div class="flag">${form?tt("EN FORME")+"<br>"+tt("3 victoires de suite"):tt("Carte classique")}</div>${av(p.n,"fav")}<div class="num ovr">${ovr(p)}</div><div class="sub" style="color:#4a3a08">${tt(p.pos||"Milieu")}</div>
+<div class="num nm">${p.n.toUpperCase()}</div><div class="st">${ATT.map((a,i)=>`<span>${p.s[i]} ${ABR[LANG][i]}</span>`).join("")}</div></div>
+</div><div><div class="card"><b>${tt("5 derniers matchs")}</b><div class="hist" style="margin-top:8px">${[...p.h].map(r=>`<b class="${r}">${HL[LANG][r]}</b>`).join("")}</div></div>
+<div class="card row sp"><span>${tt("Points du mois")}</span><b class="num score" style="font-size:30px">${p.pts}</b></div>
+<h2 style="margin-top:8px">${tt("Badges")}</h2><div class="chips">${p.mvp>=2?'<span class="tag w">⭐ '+tt("Habitué du MVP")+'</span>':""}${form?'<span class="tag w">🔥 '+tt("En forme")+'</span>':""}${p.mj>=6?'<span class="tag">📅 '+tt("Assidu")+'</span>':""}${p.cas>=2?'<span class="tag">🥘 '+tt("Roi de la casserole")+'</span>':""}<span class="tag">⚽ ${tt("{n} matchs en octobre",{n:p.mj})}</span></div>${n===ME?profEdit():""}<div class="card row sp" style="margin-top:14px"><span class="sub">${tt("Connecté :")} <b>${ME}</b></span><button class="btn alt" style="width:auto" id="logoutBtn">${tt("Se déconnecter")}</button></div></div></div>`;
+$$("[data-pp]").forEach(c=>c.onclick=()=>renderProfil(c.dataset.pp))}
+// classement
+function ranked(){return P.map(p=>({...p,avg:p.mj?p.pts/p.mj:0})).sort((a,b)=>(b.mj>=MIN)-(a.mj>=MIN)||b.avg-a.avg)}
+function renderRank(){const r=ranked();$("#tbl").innerHTML=`<tr><th>${tt("Joueur")}</th><th>${tt("MJ")}</th><th>${tt("Pts")}</th><th>${tt("Moy.")}</th></tr>`+r.map((p,i)=>`<tr data-p="${p.n}" class="${p.mj<MIN?"out":""}"><td class="n">${p.mj>=MIN?i+1+". ":""}${p.n}</td><td>${p.mj}</td><td>${p.pts}</td><td class="n">${p.avg.toFixed(2)}</td></tr>`).join("");
+$$("#tbl tr[data-p]").forEach(t=>t.onclick=()=>{renderProfil(t.dataset.p);go("profil")});
+const el=r.filter(p=>p.mj>=MIN);while(el.length<3)el.push({n:"–"});const reg=[...P].sort((a,b)=>b.mj-a.mj)[0],cas=[...P].sort((a,b)=>b.cas-a.cas)[0];
+$("#troph").innerHTML=`<div><b>👑</b>${tt("Champion")}<br><strong>${el[0].n}</strong></div><div><b>📅</b>${tt("Plus régulier")}<br><strong>${reg.n}</strong></div><div><b>🥾</b>${tt("Soulier de plomb")}<br><strong>${cas.n}</strong></div>`;
+$("#story").innerHTML=`<div class="num" style="font-size:22px">${L.name.toUpperCase()}</div><div class="sub" style="color:#cfe3d3">${tt("Bilan d'octobre 2026")}</div><div style="font-size:44px;margin-top:22px">👑</div><div class="num" style="font-size:36px">${el[0].n.toUpperCase()}</div><div class="sub" style="color:#cfe3d3">${tt("Champion du mois")}</div>
+<div class="pod"><div style="height:80px">2<br>${el[1].n}</div><div style="height:110px;background:rgba(232,185,49,.35)">1<br>${el[0].n}</div><div style="height:60px">3<br>${el[2].n}</div></div>`}
+$("#storyBtn").onclick=()=>$("#modal").classList.add("on");$("#closeM").onclick=()=>$("#modal").classList.remove("on");
+function setLeague(i){L=LG[i];P=L.P;results=L.res;mates=curMates();Object.keys(sel).forEach(k=>delete sel[k]);sc.A=sc.B=0;$("#sA").textContent=0;$("#sB").textContent=0;
+$("#pick").innerHTML=P.map(p=>`<button class="chip" data-n="${p.n}">${p.n}</button>`).join("");
+vi=0;
+$("#lgTitle").textContent=L.name;renderMatch();$("#lgCode").textContent=L.code;
+$("#lgBtn").textContent=`${L.emoji} ${tt("Mes ligues")} (${LG.length}) ▾`;
+renderResults();renderRank();renderProfil(ME);renderVest();bal();renderSheet();renderRoster();pollDraft=[];renderPoll();renderChat();renderStats()}
+function renderSheet(){$("#lgList").innerHTML=LG.map((l,i)=>`<button class="lgi ${l===L?"on":""}" data-i="${i}"><span><b>${l.emoji} ${l.name}</b><br><span class="sub">${tt("{n} joueurs",{n:l.P.length})} · ${tt(l.role)}</span></span><span>${l===L?"✓":""}</span></button>`).join("")}
+function addLeague(o){LG.push(o);setLeague(LG.length-1);$("#lgModal").classList.remove("on");$("#joinCode").value=$("#newName").value="";toast(tt("Ligue active :")+" "+o.name)}
+$("#lgBtn").onclick=()=>$("#lgModal").classList.add("on");
+$("#lgClose").onclick=()=>$("#lgModal").classList.remove("on");
+$("#lgList").onclick=e=>{const b=e.target.closest(".lgi");if(!b)return;setLeague(+b.dataset.i);$("#lgModal").classList.remove("on");toast(tt("Ligue active :")+" "+L.name)};
+$("#joinBtn").onclick=()=>{const c=$("#joinCode").value.trim().toUpperCase();if(!c){toast(tt("Saisis un code d'invitation."));return}addLeague({name:tt("Ligue")+" "+c,emoji:"🤝",code:c,meta:"Ligue rejointe avec un code",match:{date:"2026-10-15",time:"19:00",place:"",size:4,link:"https://ehadmore.com/#feed",going:[ME,"Nico","Sarah"]},P:mkP(L1.map(r=>r[0]==="Karim"?[ME,...r.slice(1)]:r)),res:[],mates:["Nico","Sarah","Léa"],role:"Joueur",chat:[],poll:null})};
+$("#newBtn").onclick=()=>{const n=$("#newName").value.trim();if(!n){toast(tt("Donne un nom à ta ligue."));return}addLeague({name:n,emoji:"🆕",code:n.slice(0,3).toUpperCase()+"-"+Math.floor(1000+Math.random()*9000),meta:"Tu es l'organisateur",match:{date:"",time:"10:00",place:"",size:5,link:"https://ehadmore.com/#feed",going:[ME]},P:mkP([[ME,[70,70,70,70,70],"",0,0,0,0]]),res:[],mates:[],role:"Organisateur",chat:[],poll:null})};
+const ACC=[];
+const lsGet=k=>{try{return localStorage.getItem("rankr."+k)}catch(_){return null}},lsSet=(k,v)=>{try{localStorage.setItem("rankr."+k,v)}catch(_){}},lsDel=k=>{try{localStorage.removeItem("rankr."+k)}catch(_){}};
+const rnd=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const SEEDN=()=>JSON.parse(SEED).flatMap(l=>l.P.map(p=>p.n));
+async function hashPw(pw,salt){const t=salt+"|"+pw;try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(_){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return "f"+(4294967296*(2097151&h2)+(h1>>>0)).toString(16)}}
+const BASE={"Débutant":62,"Intermédiaire":72,"Confirmé":82};let lvl="Intermédiaire";
+function setMe(a){const old=ME;ME=a.pseudo;LG.forEach(l=>{l.P.forEach(p=>{if(p.n===old){p.n=ME;if(a.base)p.s=p.s.map(()=>a.base)}});l.res.forEach(r=>{r[0]=r[0].split(old).join(ME);r[1]=r[1].split(old).join(ME);const d=r[6];if(d){d.A=d.A.map(x=>x===old?ME:x);d.B=d.B.map(x=>x===old?ME:x);if(d.gk)["A","B"].forEach(t=>{if(d.gk[t]===old)d.gk[t]=ME});d.ev.forEach(e=>{if(e.s===old)e.s=ME;if(e.a===old)e.a=ME});if(d.min[old]!=null){d.min[ME]=d.min[old];delete d.min[old]}if(d.v){const R=d.v.r;if(R[old]){R[ME]=R[old];delete R[old]}if(d.v.mvp===old)d.v.mvp=ME;if(d.v.cas===old)d.v.cas=ME}}});l.mates=l.mates.map(m=>m===old?ME:m);l.match.going=l.match.going.map(m=>m===old?ME:m);l.chat.forEach(c=>{if(c.n===old)c.n=ME});if(l.poll)l.poll.opts.forEach(o=>{o.v=o.v.map(m=>m===old?ME:m)})})}
+const okMail=v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+function msg(id,t,ok){const e=$(id);e.textContent=t;e.className="msg"+(ok?" ok":"")}
+function tab(t){const up=t==="up";$("#fIn").style.display=up?"none":"block";$("#fUp").style.display=up?"block":"none";$("#tabIn").classList.toggle("on",!up);$("#tabUp").classList.toggle("on",up);$("#tabIn").setAttribute("aria-selected",!up);$("#tabUp").setAttribute("aria-selected",up);msg("#inErr","");msg("#upErr","")}
+function loadWorld(a){let w=null;try{w=JSON.parse(lsGet("world:"+a.id)||"null")}catch(_){}
+if(w&&w.LG&&w.LG.length){LG.length=0;LG.push(...w.LG);L=LG[Math.min(w.li||0,LG.length-1)];ME=a.pseudo}
+else{LG.length=0;LG.push(...JSON.parse(SEED));L=LG[0];ME="Karim";setMe(a);if(a.pos)LG.forEach(l=>l.P.forEach(p=>{if(p.n===ME)p.pos=a.pos}))}
+P=L.P;results=L.res}
+function enter(a,quiet){delete PH[ME];CUR=a;loadWorld(a);if(a.photo)PH[ME]=a.photo;lsSet("session",a.id);setLeague(LG.indexOf(L));$("#auth").classList.add("hide");go("home");if(!quiet)toast(tt("Bienvenue, {n} !",{n:ME}))}
+function logout(){doSave();lsDel("session");CUR=null;delete PH[ME];$("#lgModal").classList.remove("on");$("#modal").classList.remove("on");$("#inPw").value="";tab("in");$("#auth").classList.remove("hide")}
+$("#tabIn").onclick=()=>tab("in");$("#tabUp").onclick=()=>tab("up");$("#goUp").onclick=()=>tab("up");$("#goIn").onclick=()=>tab("in");
+$$(".eye").forEach(b=>b.onclick=()=>{const i=b.previousElementSibling,h=i.type==="password";i.type=h?"text":"password";b.textContent=h?tt("Masquer"):tt("Afficher")});
+$$("#lvl .chip").forEach(c=>c.onclick=()=>{lvl=c.dataset.l;$$("#lvl .chip").forEach(x=>x.classList.toggle("A",x===c))});
+$("#inBtn").onclick=async()=>{const e=$("#inMail").value.trim().toLowerCase(),p=$("#inPw").value;if(!okMail(e))return msg("#inErr",tt("Saisis une adresse e-mail valide."));const a=ACC.find(x=>x.email===e);if(!a||a.h!==await hashPw(p,a.s))return msg("#inErr",tt("E-mail ou mot de passe incorrect."));enter(a)};
+$("#demoBtn").onclick=()=>{const a=ACC.find(x=>x.id==="demo");if(a)enter(a)};
+$("#magicBtn").onclick=()=>{const e=$("#inMail").value.trim();if(!okMail(e))return msg("#inErr",tt("Saisis ton e-mail pour recevoir le lien."));msg("#inErr",tt("Lien envoyé à {e} (démo : aucun e-mail réel n'est envoyé).",{e}),true)};
+$("#upBtn").onclick=async()=>{const n=$("#upName").value.trim(),e=$("#upMail").value.trim().toLowerCase(),p=$("#upPw").value,m=t=>msg("#upErr",t);
+if(n.length<2)return m(tt("Le pseudo doit faire au moins 2 caractères."));
+if(/[<>&\x22\x27\x60]/.test(n))return m(tt("Le pseudo contient des caractères interdits."));const low=n.toLowerCase();if(ACC.some(a=>a.pseudo.toLowerCase()===low)||SEEDN().some(x=>x.toLowerCase()===low))return m(tt("Ce pseudo est déjà pris. Choisis-en un autre."));
+if(!okMail(e))return m(tt("Saisis une adresse e-mail valide."));
+if(ACC.some(a=>a.email===e))return m(tt("Un compte existe déjà avec cet e-mail. Connecte-toi."));
+if(p.length<6)return m(tt("Le mot de passe doit contenir au moins 6 caractères."));
+const sl=rnd(),a={id:rnd(),email:e,s:sl,h:await hashPw(p,sl),pseudo:n,base:BASE[lvl],photo:upPh};ACC.push(a);saveAcc();upPh=null;$("#upAv").textContent="📷";enter(a)};
+$("#auth").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT")($("#fUp").style.display==="block"?$("#upBtn"):$("#inBtn")).click()});
+const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+let plLvl="Intermédiaire";
+function buildPick(){$("#pick").innerHTML=P.map(p=>`<button class="chip ${sel[p.n]||""}" data-n="${p.n}">${p.n}</button>`).join("")}
+function renderRoster(){const org=L.role==="Organisateur",keep=$("#plName")?$("#plName").value:"";
+$("#roster").innerHTML=`<b>${tt("Joueurs de la ligue")} (${P.length})</b><div class="chips" style="margin:10px 0 6px">${P.map(p=>{const go=L.match.going.includes(p.n);
+if(pendingRm===p.n)return `<span class="tag">${p.n} : ${tt("supprimer")}${p.mj?" "+tt("(historique perdu)"):""} ? <button class="rm rmyes" data-n="${p.n}">${tt("Oui")}</button><button class="rm rmno">${tt("Non")}</button></span>`;
+return `<span class="tag ${go?"w":""}"><button class="pn" data-n="${p.n}" ${org?"":"disabled"}>${go?"✓ ":""}${p.n}</button>${org&&p.n!==ME?`<button class="rm" data-n="${p.n}" aria-label="${tt("Supprimer")} ${p.n}">✕</button>`:""}</span>`}).join("")}</div><p class="sub" style="margin:0 0 10px;font-size:13px">✓ = ${tt("confirmé pour le prochain match.")}${org?" "+tt("Touche un nom pour changer sa présence, ✕ pour supprimer un joueur."):""}</p>`+(org?`<label for="plName" class="sub">${tt("Ajouter un joueur (un à la fois)")}</label><div class="row" style="margin-top:6px"><input id="plName" maxlength="16" placeholder="${tt("Pseudo du joueur")}"><button class="btn alt" style="width:auto" id="plBtn">${tt("Ajouter")}</button></div><div class="chips" id="plLvl" style="margin:10px 0 4px">${Object.keys(BASE).map(l=>`<button class="chip lv ${l===plLvl?"A":""}" data-l="${l}">${tt(l)}</button>`).join("")}</div><p class="msg" id="plMsg" role="alert"></p>`:`<p class="sub">${tt("Seul l'organisateur peut gérer les joueurs.")}</p>`);
+if($("#plName"))$("#plName").value=keep}
+function addPlayer(){const n=$("#plName").value.trim().replace(/\s+/g," "),m=t=>msg("#plMsg",t),k=norm(n);if(/[<>&\x22\x27\x60]/.test(n))return m(tt("Le pseudo contient des caractères interdits."));
+if(n.length<2)return m(tt("Le pseudo doit faire au moins 2 caractères."));
+if(P.some(p=>norm(p.n)===k))return m(tt("{n} fait déjà partie de cette ligue.",{n}));
+if(ACC.some(a=>norm(a.pseudo)===k)||LG.some(l=>l.P.some(p=>norm(p.n)===k)))return m(tt("{n} est déjà inscrit sur le site. Demande-lui de rejoindre la ligue avec le code {c}.",{n,c:L.code}));
+P.push({n,s:[...Array(5)].map(()=>BASE[plLvl]),h:"",pts:0,mvp:0,cas:0,mj:0,pos:"Milieu"});
+buildPick();bal();renderRoster();renderSheet();renderRank();renderProfil(cur);toast(tt("{n} a été ajouté à {l}",{n,l:L.name}));$("#plName").focus()}
+let pendingRm=null;
+function removePlayer(n){const i=P.findIndex(p=>p.n===n);if(i<0||n===ME)return;P.splice(i,1);delete sel[n];L.match.going=L.match.going.filter(g=>g!==n);L.mates=L.mates.filter(x=>x!==n);mates=curMates();vi=0;pendingRm=null;buildPick();bal();renderRoster();renderMatch();renderSheet();renderRank();renderVest();renderProfil(P.some(p=>p.n===cur)?cur:ME);toast(tt("{n} a été supprimé de la ligue",{n}))}
+function toggleGoing(n){const g=L.match.going,i=g.indexOf(n);if(i<0)g.push(n);else g.splice(i,1);renderMatch();renderRoster()}
+$("#roster").onclick=e=>{const c=e.target.closest(".lv");if(c){plLvl=c.dataset.l;$$("#plLvl .chip").forEach(x=>x.classList.toggle("A",x===c));return}
+const y=e.target.closest(".rmyes");if(y)return removePlayer(y.dataset.n);
+if(e.target.closest(".rmno")){pendingRm=null;return renderRoster()}
+const r=e.target.closest(".rm");if(r){pendingRm=r.dataset.n;return renderRoster()}
+const pn=e.target.closest(".pn");if(pn&&L.role==="Organisateur")return toggleGoing(pn.dataset.n);
+if(e.target.closest("#plBtn"))addPlayer()};
+$("#roster").onkeydown=e=>{if(e.key==="Enter"&&e.target.id==="plName")addPlayer()};
+const fmtD=d=>{if(!d)return tt("Date à définir");const s=new Date(d+"T12:00:00").toLocaleDateString(LANGS[LANG].l,{weekday:"long",day:"numeric",month:"long"});return s[0].toUpperCase()+s.slice(1)};
+const fmtT=x=>x?(LANG==="fr"?x.replace(":","h"):x):"";
+function announce(){const m=L.match,n=m.size,x=Math.max(0,2*n-m.going.length);return tt("Match de foot {f}",{f:n+"v"+n})+(m.date?" · "+fmtD(m.date):"")+(m.time?" · "+fmtT(m.time):"")+(m.place?" · "+m.place:"")+". "+tt("Il manque {x} joueur(s) !",{x})+" "+tt("Niveau amateur, ambiance entre potes. Réponds ici si tu es partant.")}
+function copyText(t){const ok=()=>toast(tt("Texte de l'annonce copié"));const fb=()=>{const a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();let d=false;try{d=document.execCommand("copy")}catch(_){}a.remove();d?ok():toast(tt("Copie impossible. Texte :")+" "+t)};
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,fb);else fb()}
+function renderMatch(){const m=L.match,n=m.size,need=2*n,got=m.going.length,x=Math.max(0,need-got),org=L.role==="Organisateur";
+$("#nextD").textContent=fmtD(m.date)+(m.time?" · "+fmtT(m.time):"");
+$("#lgMeta").textContent=`${tt("Format")} ${n}v${n} · ${m.place||tt("Lieu à définir")}`;
+$("#nextI").textContent=`${tt("Confirmés : {g}/{need} · format {f}",{g:got,need,f:n+"v"+n})}${m.place?" · "+m.place:""}`;
+$("#fmtHint").textContent=tt("Format prévu : {f} ({need} joueurs).",{f:n+"v"+n,need});
+$("#miss").innerHTML=x?`<div class="warn"><b>${tt("Il manque {x} joueur(s)",{x})}</b><div class="row" style="margin-top:8px">${m.link?`<a class="btn" style="background:var(--gold);color:#2b2000" href="${m.link}" target="_blank" rel="noopener noreferrer">${tt("Publier une annonce")} ↗</a>`:`<span style="flex:1;font-size:14px">${org?tt("Ajoute un lien d'annonce dans les paramètres du match."):tt("L'organisateur n'a pas encore ajouté de lien d'annonce.")}</span>`}<button class="btn alt" id="copyAnn">${tt("Copier le texte")}</button></div></div>`:`<div class="warn">✓ ${tt("Équipes complètes")}</div>`;
+$("#mtActs").innerHTML=`<button class="btn alt" id="goBtn">${m.going.includes(ME)?"✓ "+tt("Je participe"):tt("Je participe")}</button>`+(org?`<button class="btn alt" id="mtEdit">${tt("Modifier le match")}</button>`:"")}
+function openMt(){const m=L.match;$("#mtFmt").value=m.size;$("#mtDate").value=m.date;$("#mtTime").value=m.time;$("#mtPlace").value=m.place;$("#mtLink").value=m.link;msg("#mtErr","");$("#mtModal").classList.add("on");$("#mapBox").style.display="none"}
+$("#mtFmt").innerHTML=[3,4,5,6,7,8,9,10,11].map(n=>`<option value="${n}">${n}v${n}</option>`).join("");
+$("#mtActs").onclick=e=>{if(e.target.closest("#goBtn"))toggleGoing(ME);else if(e.target.closest("#mtEdit"))openMt()};
+$("#miss").onclick=e=>{if(e.target.closest("#copyAnn"))copyText(announce())};
+$("#mtCancel").onclick=()=>$("#mtModal").classList.remove("on");
+$("#mtSave").onclick=()=>{const d=$("#mtDate").value,t=$("#mtTime").value,pl=$("#mtPlace").value.trim(),n=+$("#mtFmt").value;let lk=$("#mtLink").value.trim();
+if(!d)return msg("#mtErr",tt("Choisis une date."));
+if(lk){try{const u=new URL(/^https?:\/\//i.test(lk)?lk:"https://"+lk);if(!/^https?:$/.test(u.protocol))throw 0;lk=u.href}catch(_){return msg("#mtErr",tt("Le lien n'est pas valide. Exemple :")+" https://ehadmore.com/#feed")}}
+Object.assign(L.match,{date:d,time:t,place:pl,size:n,link:lk});$("#mtModal").classList.remove("on");renderMatch();renderRoster();toast(tt("Prochain match mis à jour"))}
+document.addEventListener("click",e=>{if(e.target.closest("#logoutBtn"))logout()});
+// ===== Détail d'un match =====
+let curM=0,dOpen=null;
+const goalsOf=(d,n)=>d.ev.filter(e=>e.s===n).length,assistsOf=(d,n)=>d.ev.filter(e=>e.a===n).length;
+function openMatch(i){curM=i;dOpen=null;renderDetail();go("detail")}
+function fillAssist(){const d=results[curM][6],s=$("#gS").value,t=d.A.includes(s)?d.A:d.B;$("#gA").innerHTML=`<option value="">${tt("Sans passeur")}</option>`+t.filter(x=>x!==s).map(x=>`<option>${x}</option>`).join("")}
+function renderDetail(){const r=results[curM];if(!r||!r[6])return;const d=r[6];d.gk=d.gk||{A:null,B:null};d.gkr=d.gkr||{A:[],B:[]};const org=L.role==="Organisateur",mine=d.A.includes(ME)?"A":d.B.includes(ME)?"B":null,v=vstore(d),dur=d.dur;
+const row=n=>{const g=goalsOf(d,n),a=assistsOf(d,n),t=d.min[n]==null?dur:d.min[n];return `<div class="prow"><div class="row sp"><span>${n===ME?"<b>"+n+"</b>":n}${d.gk.A===n||d.gk.B===n?" 🧤":""}${g?` <span class="tag">⚽ ${g}</span>`:""}${a?` <span class="tag">🅰 ${a}</span>`:""}</span><span class="sub">${t}'</span></div><div class="pbar"><i style="width:${Math.round(t/dur*100)}%"></i></div></div>`};
+const evs=d.ev.map((e,i)=>({...e,i})).sort((x,y)=>x.m-y.m),ea=d.ev.filter(e=>e.t==="A").length,eb=d.ev.filter(e=>e.t==="B").length;
+const mates2=(mine==="A"?d.A:d.B||[]).filter(x=>x!==ME),seg=(m,a,x)=>`<div class="attr"><span>${tt(a)}</span><div class="seg" data-m="${m}" data-a="${a}"><button class="dn ${x<0?"on":""}" data-v="-1" aria-label="${tt("Baisse")} ${tt(a)}">−</button><button class="eq ${x==0?"on":""}" data-v="0" aria-label="${tt("Stable")} ${tt(a)}">=</button><button class="up ${x>0?"on":""}" data-v="1" aria-label="${tt("Hausse")} ${tt(a)}">+</button></div></div>`;
+const pk=(t,cls)=>`<div class="card"><b>${t==="mvp"?"⭐ "+tt("Homme du match"):"🥘 "+tt("Casserole de la soirée")}</b><div class="chips" style="margin-top:8px">${[ME,...mates2].map(p=>`<button class="chip ${v[t]===p?cls:""}" data-vt="${t}" data-p="${p}">${p}</button>`).join("")}</div></div>`;
+const mg=mine?d.gk[mine]:null,gkCard=mine&&mg&&mg!==ME?`<div class="card"><b>🧤 ${tt("Gardien")} : ${esc(mg)}</b><p class="sub">${tt("Note sa performance dans les buts")}</p>${stars(v.gk||0)}</div>`:"";
+const rate=mine?`<h2>${tt("Noter mes coéquipiers")}${v.sent?` <span class="tag w">${tt("✓ Notes envoyées")}</span>`:""}</h2>`+(mates2.length?mates2.map(m=>{const R=v.r[m]||{},done=Object.keys(R).length>0;return `<div class="card"><button class="dm row sp" data-m="${m}" style="width:100%"><b>${m}</b><span class="tag ${done?"w":""}">${done?tt("✓ noté"):tt("à noter")}</span></button>${dOpen===m?ATT.map(a=>seg(m,a,R[a]||0)).join(""):""}</div>`}).join("")+pk("mvp","A")+pk("cas","B")+gkCard+`<button class="btn" id="dSend">${v.sent?tt("Mettre à jour mes notes"):tt("Envoyer mes notes")}</button>`:`<p class="sub">${tt("Pas de coéquipiers à noter.")}</p>`):`<h2>${tt("Noter mes coéquipiers")}</h2><p class="sub">${tt("Tu n'as pas joué ce match : tu ne peux pas noter.")}</p>`;
+const all=[...d.A,...d.B],gks=t=>org?`<select data-gkt="${t}" aria-label="${tt("Gardien")}"><option value="">${tt("Gardien")} : —</option>${d[t].map(n=>`<option ${d.gk[t]===n?"selected":""}>${n}</option>`).join("")}</select>`:"";
+const add=org?`<h2>${tt("Ajouter un but")}</h2><div class="card"><label for="gMin" class="sub">${tt("Minute")}</label><input id="gMin" type="number" min="1" max="${dur}"><label for="gS" class="sub">${tt("Buteur")}</label><select id="gS">${all.map(n=>`<option>${n}</option>`).join("")}</select><label for="gA" class="sub">${tt("Passeur")}</label><select id="gA"></select><p class="msg" id="gMsg" role="alert"></p><button class="btn" id="gAdd">${tt("Ajouter le but")}</button></div>`:"";
+$("#detail").innerHTML=`<button class="lnk" id="dBack"><span class="arr">←</span> ${tt("Retour")}</button><h1>${tt("Détail du match")}</h1>
+<div class="two"><div><div class="card" style="margin-top:0"><div class="row sp"><b>${tn(r[0])}</b><b class="num score" style="direction:ltr">${r[2]} – ${r[3]}</b><b>${tn(r[1])}</b></div><p class="sub" style="margin-top:6px">${tt(r[4])}${r[5]?" · "+tt(r[5]):""} · ${tt("Durée : {n} min",{n:dur})}</p></div>
+<h2>${tt("Compositions et temps de jeu")}</h2><div class="two2"><div class="card"><b>${tn(r[0])}</b>${d.A.map(row).join("")}${gks("A")}</div><div class="card"><b>${tn(r[1])}</b>${d.B.map(row).join("")}${gks("B")}</div></div>
+<h2>${tt("Buts et passes décisives")}</h2><div class="card">${evs.length?evs.map(e=>`<div class="ev"><span class="tag ${e.t==="A"?"w":""}">${e.m}' · ${e.t}</span> ⚽ <b>${e.s}</b>${e.a?` <span class="sub">· ${tt("passe de")} ${e.a}</span>`:""}${org?` <button class="rm" data-ei="${e.i}" aria-label="${tt("Supprimer")}">✕</button>`:""}</div>`).join(""):`<p class="sub">${tt("Aucun but saisi pour ce match.")}</p>`}${evs.length&&(ea!==r[2]||eb!==r[3])?`<p class="sub" style="margin-top:8px">${tt("Détail des buts incomplet : {a}–{b} saisis sur {c}–{d}.",{a:ea,b:eb,c:r[2],d:r[3]})}</p>`:""}</div></div>
+<div>${add}${rate}</div></div>`;
+if(org)fillAssist()}
+function addGoal(){const d=results[curM][6],m=+$("#gMin").value,s=$("#gS").value,a=$("#gA").value||null;
+if(!s)return msg("#gMsg",tt("Choisis un buteur."));
+if(!(m>=1&&m<=d.dur))return msg("#gMsg",tt("Minute invalide (1 à {n}).",{n:d.dur}));
+d.ev.push({m,t:d.A.includes(s)?"A":"B",s,a});renderDetail();renderResults();toast(tt("But ajouté"))}
+$("#results").onclick=e=>{const w=e.target.closest(".rw");if(w)openMatch(+w.dataset.i)};
+$("#results").onkeydown=e=>{if(e.key==="Enter"){const w=e.target.closest(".rw");if(w)openMatch(+w.dataset.i)}};
+$("#detail").onclick=e=>{const r=results[curM];if(!r||!r[6])return;const d=r[6],v=vstore(d);
+if(e.target.closest("#dBack"))return go("home");
+const dm=e.target.closest(".dm");if(dm){dOpen=dOpen===dm.dataset.m?null:dm.dataset.m;return renderDetail()}
+const sg=e.target.closest(".seg button");if(sg){const s=sg.parentNode;(v.r[s.dataset.m]=v.r[s.dataset.m]||{})[s.dataset.a]=+sg.dataset.v;return renderDetail()}
+const ch=e.target.closest("[data-vt]");if(ch){v[ch.dataset.vt]=ch.dataset.p;return renderDetail()}
+if(e.target.closest("#dSend")){v.sent=true;toast(tt("Notes envoyées. Les cartes se mettent à jour quand 3 coéquipiers ont voté."));renderVest();return renderDetail()}
+const st=e.target.closest(".stars button");if(st){v.gk=+st.dataset.s;return renderDetail()}
+const rm=e.target.closest("[data-ei]");if(rm){d.ev.splice(+rm.dataset.ei,1);renderResults();return renderDetail()}
+if(e.target.closest("#gAdd"))addGoal()};
+$("#detail").onchange=e=>{if(e.target.id==="gS")fillAssist();if(e.target.dataset.gkt){results[curM][6].gk[e.target.dataset.gkt]=e.target.value||null;renderDetail()}};
+// ===== Sondage de date =====
+let pollDraft=[];
+function renderPoll(){const p=L.poll,org=L.role==="Organisateur",lbl=o=>fmtD(o.d)+(o.t?" · "+fmtT(o.t):"");
+let h=`<b>📅 ${tt("Sondage : quelle date ?")}</b>`;
+if(p&&p.open){const mx=Math.max(...p.opts.map(o=>o.v.length));
+h+=p.opts.map((o,i)=>{const me=o.v.includes(ME),lead=mx>0&&o.v.length===mx;return `<div class="popt"><button class="pv ${me?"on":""}" data-i="${i}" aria-pressed="${me}"><span>${me?"✓ ":""}${lbl(o)}</span><span class="tag ${lead?"w":""}">${o.v.length}</span></button><span class="pbar" style="display:block"><i style="width:${mx?Math.round(o.v.length/mx*100):0}%"></i></span><div class="row sp"><span class="sub" style="font-size:13px">${o.v.length?o.v.map(esc).join(", "):"—"}</span>${org?`<button class="lnk pc" data-i="${i}">${tt("Confirmer cette date")}</button>`:""}</div></div>`}).join("")+`<p class="sub" style="margin-top:8px">${tt("Touche une date pour voter (plusieurs choix possibles).")}</p>`}
+else if(p&&p.chosen!=null){h+=`<p style="margin:8px 0">✓ ${tt("Date confirmée :")} <b>${lbl(p.opts[p.chosen])}</b></p>`+(org?`<button class="btn alt" id="pNew">${tt("Nouveau sondage")}</button>`:"")}
+else if(org){h+=`<p class="sub" style="margin:6px 0 8px">${tt("Propose 2 à 4 dates : chacun votera.")}</p>${pollDraft.map((o,i)=>`<div class="row sp" style="margin-bottom:6px"><span>${lbl(o)}</span><button class="rm" data-di="${i}" aria-label="${tt("Supprimer")}">✕</button></div>`).join("")}${pollDraft.length<4?`<div class="row"><input type="date" id="pdD" aria-label="${tt("Date")}"><input type="time" id="pdT" value="10:00" aria-label="${tt("Heure")}"><button class="btn alt" style="width:auto" id="pdAdd">${tt("Ajouter")}</button></div>`:""}<p class="msg" id="pMsg" role="alert"></p><button class="btn" id="pLaunch">${tt("Lancer le sondage")}</button>`}
+else h+=`<p class="sub">${tt("Aucun sondage en cours.")}</p>`;
+$("#poll").innerHTML=h}
+$("#poll").onclick=e=>{const p=L.poll,org=L.role==="Organisateur";
+const pv=e.target.closest(".pv");if(pv&&p){const o=p.opts[+pv.dataset.i],k=o.v.indexOf(ME);if(k<0)o.v.push(ME);else o.v.splice(k,1);return renderPoll()}
+const pc=e.target.closest(".pc");if(pc&&p&&org){const o=p.opts[+pc.dataset.i];Object.assign(L.match,{date:o.d,time:o.t});p.open=false;p.chosen=+pc.dataset.i;renderMatch();renderPoll();return toast(tt("Date confirmée :")+" "+fmtD(o.d))}
+if(e.target.closest("#pNew")){L.poll=null;pollDraft=[];return renderPoll()}
+const rm=e.target.closest("[data-di]");if(rm){pollDraft.splice(+rm.dataset.di,1);return renderPoll()}
+if(e.target.closest("#pdAdd")){const d=$("#pdD").value,t=$("#pdT").value;if(!d)return msg("#pMsg",tt("Choisis une date."));if(!pollDraft.some(o=>o.d===d&&o.t===t))pollDraft.push({d,t,v:[]});return renderPoll()}
+if(e.target.closest("#pLaunch")){if(pollDraft.length<2)return msg("#pMsg",tt("Ajoute au moins 2 dates."));L.poll={open:true,chosen:null,opts:pollDraft.map(o=>({...o}))};pollDraft=[];renderPoll();toast(tt("Sondage lancé"))}};
+// ===== Chat de ligue =====
+function renderChat(){const l=$("#chatList");l.innerHTML=L.chat.length?L.chat.map(c=>{const me=c.n===ME;return `<div class="msg-row ${me?"me":""}">${me?"":av(c.n,"av")}<div class="bub"><div class="sub" style="font-size:12px">${me?"":"<b>"+esc(c.n)+"</b> · "}${tt(c.d)} ${esc(c.t)}</div><div>${esc(c.x)}</div></div></div>`}).join(""):`<p class="sub">${tt("Aucun message. Lance la discussion !")}</p>`;l.scrollTop=l.scrollHeight;$("#chatLg").textContent=L.name}
+function sendChat(){const i=$("#chatIn"),x=i.value.trim();if(!x)return;const d=new Date(),t=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");L.chat.push({n:ME,d:"Aujourd'hui",t,x:x.slice(0,300)});i.value="";renderChat()}
+$("#chatSend").onclick=sendChat;$("#chatIn").onkeydown=e=>{if(e.key==="Enter")sendChat()};
+// ===== Stats =====
+let stTab="rank";
+function tally(k){const m={};results.forEach(r=>{const d=r[6];d&&d.ev.forEach(e=>{if(e[k])m[e[k]]=(m[e[k]]||0)+1})});return Object.entries(m).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,8)}
+function gkTable(){const m={};results.forEach(r=>{const d=r[6];if(!d||!d.gk)return;const mine=d.A.includes(ME)?"A":d.B.includes(ME)?"B":null;["A","B"].forEach(t=>{const g=d.gk[t];if(!g)return;const o=m[g]=m[g]||{n:g,mp:0,c:0,r:[]};o.mp++;o.c+=t==="A"?r[3]:r[2];if(d.gkr&&d.gkr[t])o.r.push(...d.gkr[t]);if(d.v&&d.v.sent&&d.v.gk&&mine===t&&g!==ME)o.r.push(d.v.gk)})});return Object.values(m).filter(o=>o.r.length).map(o=>({...o,avg:o.r.reduce((a,b)=>a+b,0)/o.r.length})).sort((a,b)=>b.avg-a.avg||a.c/a.mp-b.c/b.mp)}
+function renderStats(){$$("#stTabs button").forEach(b=>b.classList.toggle("on",b.dataset.st===stTab));const rp=$("#rankPane"),sb=$("#stBody");rp.style.display=stTab==="rank"?"block":"none";sb.style.display=stTab==="rank"?"none":"block";if(stTab==="rank")return;
+let rows;if(stTab==="gk"){rows=gkTable().map(o=>({n:o.n,v:o.avg.toFixed(1)+" ★",w:o.avg/5,sub:tt("{c} buts encaissés / match · {mp} matchs",{c:(o.c/o.mp).toFixed(1),mp:o.mp})}))}
+else{const t=tally(stTab==="goals"?"s":"a"),mx=t[0]?t[0][1]:1;rows=t.map(([n,k])=>({n,v:(stTab==="goals"?"⚽ ":"🅰 ")+k,w:k/mx,sub:""}))}
+const title={goals:"Meilleurs buteurs",assists:"Meilleurs passeurs",gk:"Meilleurs gardiens"}[stTab];
+sb.innerHTML=`<h2 style="margin-top:0">${tt(title)}</h2>`+(rows.length?`<div class="card">${rows.map((r,i)=>`<button class="srow" data-n="${esc(r.n)}"><span class="num" style="font-size:22px;width:34px">${["🥇","🥈","🥉"][i]||i+1}</span>${av(r.n,"av")}<span style="flex:1;text-align:start"><b>${esc(r.n)}</b>${r.sub?`<br><span class="sub" style="font-size:13px">${r.sub}</span>`:""}<span class="pbar" style="display:block"><i style="width:${Math.round(r.w*100)}%"></i></span></span><b class="num" style="font-size:22px">${r.v}</b></button>`).join("")}</div>`:`<p class="sub">${tt("Pas encore de données.")}</p>`)+(stTab==="gk"?`<p class="sub">${tt("Note moyenne donnée par les coéquipiers (1 à 5 étoiles).")}</p>`:"")}
+$("#stTabs").onclick=e=>{const b=e.target.closest("button");if(b){stTab=b.dataset.st;renderStats()}};
+$("#stBody").onclick=e=>{const b=e.target.closest(".srow");if(b&&P.some(p=>p.n===b.dataset.n)){renderProfil(b.dataset.n);go("profil")}};
+// ===== Carte des terrains (rayon 20 km) =====
+let mapList=[],mapSel=-1,mapLive=false;
+const DEMO={lat:48.8566,lon:2.3522};
+const DEMO_P=[["Stade municipal",2.4,35],["City-stade du parc",3.1,110],["Five Indoor Arena",5.8,200],["Terrain synthétique des Lilas",7.5,260],["Complexe sportif Nord",9.2,15],["Stade des Berges",11.6,140],["Urban Five",13.4,320],["Terrain de la Plaine",16.8,75],["Stade Intercommunal",18.9,230]];
+const demoPitches=()=>DEMO_P.map(([n,km,b])=>({n,km,dx:km*Math.sin(b*Math.PI/180),dy:km*Math.cos(b*Math.PI/180)}));
+async function loadPitches(){const c=await new Promise(res=>{if(!navigator.geolocation)return res(null);navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude}),()=>res(null),{timeout:4000})});
+const lat=c?c.lat:DEMO.lat,lon=c?c.lon:DEMO.lon;
+try{const q=`[out:json][timeout:10];(node["leisure"="pitch"]["sport"="soccer"](around:20000,${lat},${lon});way["leisure"="pitch"]["sport"="soccer"](around:20000,${lat},${lon}););out center 60;`;
+const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),7000);
+const r=await fetch("https://overpass-api.de/api/interpreter",{method:"POST",body:"data="+encodeURIComponent(q),signal:ctl.signal});clearTimeout(tm);if(!r.ok)throw 0;
+const j=await r.json(),list=j.elements.map(e=>{const la=e.lat??(e.center&&e.center.lat),lo=e.lon??(e.center&&e.center.lon);if(la==null||lo==null)return null;const dx=(lo-lon)*111.32*Math.cos(lat*Math.PI/180),dy=(la-lat)*110.57;return {n:(e.tags&&e.tags.name)||tt("Terrain sans nom"),km:Math.hypot(dx,dy),dx,dy}}).filter(x=>x&&x.km<=20).sort((a,b)=>a.km-b.km).slice(0,15);
+if(!list.length)throw 0;return {live:true,list}}catch(_){return {live:false,list:demoPitches()}}}
+function drawMap(){const R=130,rings=[5,10,15,20].map(k=>`<circle class="rg" cx="150" cy="150" r="${R*k/20}"/><text x="${150+R*k/20*.71+2}" y="${150-R*k/20*.71}">${k} km</text>`).join("");
+const pts=mapList.map((p,i)=>{const x=150+R*p.dx/20,y=150-R*p.dy/20;return `<g class="mp ${i===mapSel?"on":""}" data-i="${i}"><circle cx="${x}" cy="${y}" r="10"/><text x="${x}" y="${y+3.5}" text-anchor="middle">${i+1}</text></g>`}).join("");
+$("#mapBox").innerHTML=`<svg viewBox="0 0 300 300" class="mapsvg" role="img" aria-label="${tt("Carte des terrains")}"><rect class="bg" width="300" height="300" rx="14"/>${rings}<circle class="me" cx="150" cy="150" r="6"/><text x="150" y="138" text-anchor="middle">${tt("Toi")}</text>${pts}</svg><div class="mlist">${mapList.map((p,i)=>`<button class="mi ${i===mapSel?"on":""}" data-i="${i}"><span class="tag">${i+1}</span><span style="flex:1;text-align:start">${esc(p.n)}</span><span class="sub">${p.km.toFixed(1)} km</span></button>`).join("")}</div><p class="sub" style="font-size:12px">${mapLive?tt("Source : OpenStreetMap (terrains de football répertoriés dans un rayon de 20 km)."):tt("Données de démonstration. La carte en direct se charge depuis OpenStreetMap quand le site est ouvert avec une connexion et la position autorisée.")}</p>`}
+async function openMap(){const b=$("#mapBox");b.style.display="block";b.innerHTML=`<p class="sub">⏳ ${tt("Recherche des terrains…")}</p>`;const r=await loadPitches();mapList=r.list;mapLive=r.live;mapSel=-1;drawMap()}
+$("#mapBtn").onclick=openMap;
+$("#mapBox").onclick=e=>{const g=e.target.closest("[data-i]");if(!g)return;mapSel=+g.dataset.i;$("#mtPlace").value=mapList[mapSel].n.slice(0,40);drawMap()};
+// ===== Photo & profil =====
+function readPhoto(file,cb,err){if(!file||!/^image\//.test(file.type)||file.size>5e6)return err();const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas"),s=Math.min(im.width,im.height),k=160;c.width=c.height=k;c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,k,k);cb(c.toDataURL("image/jpeg",.82))};im.onerror=err;im.src=fr.result};fr.onerror=err;fr.readAsDataURL(file)}
+let upPh=null;
+$("#upPhoto").onchange=e=>readPhoto(e.target.files[0],u=>{upPh=u;$("#upAv").innerHTML=`<img src="${u}" alt="" style="width:100%;height:100%;object-fit:cover">`},()=>msg("#upErr",tt("Image invalide ou trop lourde (5 Mo max).")));
+function profEdit(){const c=CUR||{},me=P.find(x=>x.n===ME)||{};return `<h2 style="margin-top:14px">${tt("Modifier mon profil")}</h2><div class="card"><div class="row" style="margin-bottom:10px">${av(ME,"av lg")}<div><input type="file" accept="image/*" id="pfPhoto" aria-label="${tt("Photo de profil (facultatif)")}" style="margin:0">${PH[ME]?`<button class="lnk" id="pfRm">${tt("Retirer la photo")}</button>`:""}</div></div>
+<label for="pfName" class="sub">${tt("Pseudo")}</label><input id="pfName" maxlength="16" value="${esc(ME)}">
+<label for="pfPos" class="sub">${tt("Poste")}</label><select id="pfPos">${POSL.map(o=>`<option value="${o}" ${me.pos===o?"selected":""}>${tt(o)}</option>`).join("")}</select>
+<label for="pfMail" class="sub">${tt("E-mail")}</label><input id="pfMail" type="email" value="${esc(c.email||"")}">
+<label for="pfPw" class="sub">${tt("Nouveau mot de passe (laisser vide pour ne pas changer)")}</label><input id="pfPw" type="password" autocomplete="new-password">
+<p class="msg" id="pfMsg" role="alert"></p><button class="btn" id="pfSave">${tt("Enregistrer")}</button></div>`}
+async function saveProfile(){const n=$("#pfName").value.trim(),mail=$("#pfMail").value.trim().toLowerCase(),pw=$("#pfPw").value,pos=$("#pfPos").value,m=t=>msg("#pfMsg",t);
+if(n.length<2)return m(tt("Le pseudo doit faire au moins 2 caractères."));
+if(/[<>&\x22\x27\x60]/.test(n))return m(tt("Le pseudo contient des caractères interdits."));
+const low=norm(n);if(n!==ME&&(ACC.some(a=>a!==CUR&&norm(a.pseudo)===low)||LG.some(l=>l.P.some(x=>x.n!==ME&&norm(x.n)===low))))return m(tt("Ce pseudo est déjà pris. Choisis-en un autre."));
+if(!okMail(mail))return m(tt("Saisis une adresse e-mail valide."));
+if(ACC.some(a=>a!==CUR&&a.email===mail))return m(tt("Un compte existe déjà avec cet e-mail. Connecte-toi."));
+if(pw&&pw.length<6)return m(tt("Le mot de passe doit contenir au moins 6 caractères."));
+const old=ME,ph=PH[ME];if(n!==old){setMe({pseudo:n});delete PH[old]}if(ph)PH[ME]=ph;
+LG.forEach(l=>l.P.forEach(p=>{if(p.n===ME)p.pos=pos}));
+if(CUR){CUR.pseudo=n;CUR.email=mail;CUR.pos=pos;if(pw){CUR.s=rnd();CUR.h=await hashPw(pw,CUR.s)}}
+setLeague(LG.indexOf(L));renderProfil(ME);toast(tt("Profil mis à jour"));doSave()}
+$("#profil").onclick=e=>{if(e.target.closest("#pfRm")){delete PH[ME];if(CUR)CUR.photo=null;return renderProfil(ME)}if(e.target.closest("#pfSave"))saveProfile()};
+$("#profil").onchange=e=>{if(e.target.id==="pfPhoto")readPhoto(e.target.files[0],u=>{PH[ME]=u;if(CUR)CUR.photo=u;renderProfil(ME);toast(tt("Profil mis à jour"))},()=>msg("#pfMsg",tt("Image invalide ou trop lourde (5 Mo max).")))};
+const STAT=[];
+(function(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const m=n.nodeValue.match(/^(\s*)([\s\S]*?)(\s*)$/);if(m[2]&&TR[m[2]])STAT.push({n,a:m[1],k:m[2],z:m[3]})}
+$$("[placeholder],[aria-label]").forEach(e=>["placeholder","aria-label"].forEach(a=>{const k=e.getAttribute(a);if(k&&TR[k])STAT.push({e,at:a,k})}))})();
+function refresh(){$("#lgBtn").textContent=`${L.emoji} ${tt("Mes ligues")} (${LG.length}) ▾`;renderMatch();renderResults();renderRank();renderProfil(cur);renderVest();bal();renderSheet();renderRoster();renderPoll();renderChat();renderStats();if($("#detail").classList.contains("on"))renderDetail()}
+function applyLang(){const d=document.documentElement;d.lang=LANG;d.dir=LANGS[LANG].d;
+STAT.forEach(o=>{if(o.n)o.n.nodeValue=o.a+tt(o.k)+o.z;else o.e.setAttribute(o.at,tt(o.k))});
+$$(".lang button").forEach(b=>{const on=b.dataset.lang===LANG;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
+$$(".eye").forEach(b=>{b.previousElementSibling.type="password";b.textContent=tt("Afficher")});
+$$(".msg").forEach(m=>m.textContent="");refresh()}
+function setLang(l){LANG=l;try{localStorage.setItem("lang",l)}catch(_){}applyLang()}
+$$(".lang button").forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
+const saveAcc=()=>lsSet("acc",JSON.stringify(ACC));
+let saveT=null;
+function doSave(){clearTimeout(saveT);if(!CUR)return;saveAcc();lsSet("world:"+CUR.id,JSON.stringify({LG,li:LG.indexOf(L)}))}
+const autoSave=()=>{clearTimeout(saveT);saveT=setTimeout(doSave,300)};
+["click","change","input","keyup"].forEach(ev=>document.addEventListener(ev,autoSave,true));
+addEventListener("pagehide",doSave);document.addEventListener("visibilitychange",()=>{if(document.hidden)doSave()});
+async function boot(){let sv=null;try{sv=JSON.parse(lsGet("acc")||"null")}catch(_){}
+if(sv&&sv.length){ACC.length=0;ACC.push(...sv)}
+let d=ACC.find(a=>a.id==="demo");if(!d){d={id:"demo",email:"karim@demo.fr",pseudo:"Karim",s:"demo"};ACC.unshift(d)}
+if(!d.h)d.h=await hashPw("demo123",d.s);saveAcc();
+setLeague(0);applyLang();const a=ACC.find(x=>x.id===lsGet("session"));if(a)enter(a,true)}
+boot();
+if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
